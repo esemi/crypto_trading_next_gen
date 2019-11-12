@@ -10,10 +10,11 @@
 """
 
 import logging
+import uuid
 from typing import Optional
 
 from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET
-from crypto_bot.bitmex_api import get_buckets
+from crypto_bot.bitmex_api import get_buckets, post_order
 
 
 def check_need_new_order(ticker: str) -> Optional[dict]:
@@ -49,13 +50,16 @@ def place_order(price_offset: float, low_price: float, high_price: float, color:
 
     # todo compute order size
     qty = 1. * side_factor
+    logging.info(f'place order: qty={qty}')
 
     # todo save new order to db for get client_uid
+    order_uid = uuid.uuid4().hex
+    logging.info(f'place order: save order to db {order_uid}')
 
     response = 'dry run'
     if not dry_run:
-        # todo place order
-        response = 'todo'
+        response = post_order(ticker, qty, price, order_uid)
+        logging.info(f'post order to exchange resp={response}')
 
     return {
         'qty': qty,

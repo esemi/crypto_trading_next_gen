@@ -22,6 +22,8 @@ def _env(name: str, default=None, type_: Callable = str) -> Optional[Union[int, 
 
 
 TEST_MODE = _env('TEST_MODE', False, bool)
+API_KEY = _env('API_KEY', '', str)
+API_SECRET = _env('API_SECRET', '', str)
 TICKER = _env('TICKER', None, str)
 
 # Отступ в долларах от цены свечи для ордера на вход в сделку
