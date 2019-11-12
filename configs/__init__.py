@@ -6,8 +6,8 @@ import dotenv
 dotenv.load_dotenv(dotenv.find_dotenv())
 
 
-def _env(name: str, type_: Callable = str) -> Optional[Union[int, str, bool]]:
-    var = os.getenv(name)
+def _env(name: str, default=None, type_: Callable = str) -> Optional[Union[int, str, bool]]:
+    var = os.getenv(name, default)
 
     if type_ is bool and var in ('True', 'true', '1'):
         var = True
@@ -21,4 +21,14 @@ def _env(name: str, type_: Callable = str) -> Optional[Union[int, str, bool]]:
     return var
 
 
-API_HOST = _env('EXCHANGE_API_HOST')
+TEST_MODE = _env('TEST_MODE', False, bool)
+TICKER = _env('TICKER', None, str)
+
+# Отступ в долларах от цены свечи для ордера на вход в сделку
+INIT_ORDER_PRICE_OFFSET = 1.
+
+# Размер ордера на вход в сделку, в долларах
+INIT_ORDER_SIZE = 5.
+
+RED_COLOR = 'RED'
+GREEN_COLOR = 'GREEN'

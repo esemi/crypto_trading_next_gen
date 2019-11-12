@@ -1,0 +1,1 @@
+01	*	*	*	*	./venv/bin/python ./crypto_bot/supervisor.py >> ~/crypto_bot_supervisor.log 2>&1

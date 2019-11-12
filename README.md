@@ -15,8 +15,15 @@ pytest -s -v tests
 ```
 
 
-### Run
+### Run once
 ```
-./crypto_bot/supervisor.py
-./crypto_bot/trader.py
+$ ./crypto_bot/trader.py
+$ ./crypto_bot/supervisor.py
+```
+
+
+### Run like production
+```
+$ ./crypto_bot/trader.py
+$ crontab crontab.txt
 ```
