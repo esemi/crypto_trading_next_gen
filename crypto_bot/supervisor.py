@@ -10,14 +10,10 @@
 """
 
 import logging
-import warnings
 from typing import Optional
 
-warnings.filterwarnings("ignore")
-
-import bitmex
-
-from configs import TEST_MODE, TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE
+from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET
+from crypto_bot.bitmex_api import get_buckets
 
 
 def check_need_new_order(ticker: str) -> Optional[dict]:
@@ -27,9 +23,7 @@ def check_need_new_order(ticker: str) -> Optional[dict]:
 
     """
 
-    bitmex_client = bitmex.bitmex(test=TEST_MODE)
-    last_buckets = bitmex_client.Trade.Trade_getBucketed(binSize='1h', partial=False, symbol=ticker, count=3,
-                                                         reverse=True).result()[0]
+    last_buckets = get_buckets(ticker, 3)
     logging.info(f'fetch buckets {last_buckets}')
 
     prepared_buckets = [{
@@ -46,15 +40,15 @@ def check_need_new_order(ticker: str) -> Optional[dict]:
     return
 
 
-def place_order(low_price: float, high_price: float, color: str, ticker: str, dry_run: bool = False) -> dict:
-    logging.info(f'place order: start {low_price} {high_price} {color} {ticker} {INIT_ORDER_PRICE_OFFSET}')
+def place_order(price_offset: float, low_price: float, high_price: float, color: str, ticker: str, dry_run: bool = False) -> dict:
+    logging.info(f'place order: start {low_price} {high_price} {color} {ticker} {price_offset}')
 
     side_factor = -1. if color == RED_COLOR else 1.
-    price = (low_price if color == RED_COLOR else high_price) + (side_factor * INIT_ORDER_PRICE_OFFSET)
+    price = (low_price if color == RED_COLOR else high_price) + (side_factor * price_offset)
     logging.info(f'place order: price={price}')
 
     # todo compute order size
-    qty = INIT_ORDER_SIZE * side_factor
+    qty = 1. * side_factor
 
     # todo save new order to db for get client_uid
 
@@ -62,7 +56,6 @@ def place_order(low_price: float, high_price: float, color: str, ticker: str, dr
     if not dry_run:
         # todo place order
         response = 'todo'
-        pass
 
     return {
         'qty': qty,
@@ -86,12 +79,12 @@ def main(ticker: str):
         return
 
     # todo place new order and save TP/SL config for trader.py
-    order = place_order(ticker=ticker, **bucket)
+    order = place_order(price_offset=INIT_ORDER_PRICE_OFFSET, ticker=ticker, **bucket)
     logging.info(f'place new order {order}')
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
     logging.info('start supervisor process--------------------------------------------')
     main(TICKER)
