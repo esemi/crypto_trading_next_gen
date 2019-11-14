@@ -18,10 +18,7 @@ def get_buckets(ticker: str, count: int) -> list:
 
 
 def post_order(ticker: str, qty: float, price: float, order_uid: str) -> dict:
-    resp = client.Order.Order_new(symbol=ticker, orderQty=qty, ordType='Stop', stopPx=price, clOrdID=order_uid, text='Init order by supervisor.py').result()
-    print(resp)
-    print(dir(resp))
-    return resp[0]
+    return client.Order.Order_new(symbol=ticker, orderQty=qty, ordType='Stop', stopPx=price, clOrdID=order_uid, text='Init order by supervisor.py').result()[0]
 
 
 init_client(TEST_MODE)

@@ -41,16 +41,34 @@ def check_need_new_order(ticker: str) -> Optional[dict]:
     return
 
 
-def place_order(price_offset: float, low_price: float, high_price: float, color: str, ticker: str, dry_run: bool = False) -> dict:
-    logging.info(f'place order: start {low_price} {high_price} {color} {ticker} {price_offset}')
+def place_order(price_offset: float, low_price: float, high_price: float, color: str, ticker: str, dry_run: bool = False) -> Optional[dict]:
+    logging.info(f'place order: start low={low_price} high={high_price} {color} {ticker} price_offset={price_offset}')
+    # todo compute order price
+    bucket_size = high_price - low_price
+    if bucket_size <= price_offset:
+        logging.warning(f'too small bucket={bucket_size}')
+        return
 
-    side_factor = -1. if color == RED_COLOR else 1.
-    price = (low_price if color == RED_COLOR else high_price) + (side_factor * price_offset)
-    logging.info(f'place order: price={price}')
+    if color == RED_COLOR:
+        # short order
+        side_factor = -1.
+        init_price = low_price - price_offset
+        stop_price = high_price + price_offset
+        take_price = low_price - bucket_size
+
+    else:
+        # long order
+        side_factor = 1.
+        init_price = high_price + price_offset
+        stop_price = low_price - price_offset
+        take_price = high_price + bucket_size
+
+    logging.info(f'place order: side_factor={side_factor} price={init_price} bucket_size={bucket_size} '
+                 f'stop={stop_price} take={take_price}')
 
     # todo compute order size
     qty = 1. * side_factor
-    logging.info(f'place order: qty={qty}')
+    logging.info(f'place order: qty={qty} ')
 
     # todo save new order to db for get client_uid
     order_uid = uuid.uuid4().hex
@@ -58,13 +76,15 @@ def place_order(price_offset: float, low_price: float, high_price: float, color:
 
     response = 'dry run'
     if not dry_run:
-        response = post_order(ticker, qty, price, order_uid)
+        response = post_order(ticker, qty, init_price, order_uid)
         logging.info(f'post order to exchange resp={response}')
 
     return {
         'qty': qty,
-        'price': price,
-        'client_uid': 'todo',
+        'init_price': init_price,
+        'stop_price': stop_price,
+        'take_price': take_price,
+        'order_uid': order_uid,
         'response': response
     }
 
@@ -85,6 +105,8 @@ def main(ticker: str):
     # todo place new order and save TP/SL config for trader.py
     order = place_order(price_offset=INIT_ORDER_PRICE_OFFSET, ticker=ticker, **bucket)
     logging.info(f'place new order {order}')
+    if not order:
+        return
 
 
 if __name__ == '__main__':
