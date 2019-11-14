@@ -28,7 +28,6 @@ def test_success_green():
     assert r['init_price'] == 16
     assert r['stop_price'] == 9
     assert r['take_price'] == 20
-    assert r['qty'] > 0.
 
 
 def test_success_red():
@@ -50,11 +49,10 @@ def test_success_red():
     assert r['init_price'] == 9
     assert r['stop_price'] == 16
     assert r['take_price'] == 5
-    assert r['qty'] < 0.
 
 
 def test_real_place_order():
-    r = place_order(offset, 10, 15, GREEN_COLOR, TICKER, False)
+    r = place_order(offset, 4300, 4700, RED_COLOR, TICKER, False)
     assert isinstance(r, dict)
     assert 'qty' in r
     assert 'init_price' in r
@@ -64,3 +62,19 @@ def test_real_place_order():
     assert 'response' in r
     assert 'orderID' in r['response']
     assert r['response']['orderID']
+
+
+def test_order_size_red():
+    r = place_order(offset, 8701, 8787, RED_COLOR, TICKER, True)
+    assert r['init_price'] == 8700
+    assert r['stop_price'] == 8788
+    assert r['qty'] == -4344
+
+
+def test_order_size_green():
+    r = place_order(offset, 8613, 8699, GREEN_COLOR, TICKER, True)
+    assert r['init_price'] == 8700
+    assert r['stop_price'] == 8612
+    assert r['qty'] == 4257
+
+

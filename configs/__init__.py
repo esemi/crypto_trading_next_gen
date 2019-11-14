@@ -29,8 +29,8 @@ TICKER = _env('TICKER', None, str)
 # Отступ в долларах от цены свечи для ордера на вход в сделку
 INIT_ORDER_PRICE_OFFSET = 1.
 
-# Размер ордера на вход в сделку, в долларах
-INIT_ORDER_SIZE = 5.
+# Размер ордера на вход в сделку, в BTC. Считается как 1% от депо в битках.
+INIT_ORDER_SIZE_IN_BTC = 0.005
 
 RED_COLOR = 'RED'
 GREEN_COLOR = 'GREEN'

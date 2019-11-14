@@ -10,10 +10,11 @@
 """
 
 import logging
+import math
 import uuid
 from typing import Optional
 
-from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET
+from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC
 from crypto_bot.bitmex_api import get_buckets, post_order
 
 
@@ -46,7 +47,7 @@ def place_order(price_offset: float, low_price: float, high_price: float, color:
     # todo compute order price
     bucket_size = high_price - low_price
     if bucket_size <= price_offset:
-        logging.warning(f'too small bucket={bucket_size}')
+        logging.warning(f'too small bucket={bucket_size} - skip order')
         return
 
     if color == RED_COLOR:
@@ -63,12 +64,12 @@ def place_order(price_offset: float, low_price: float, high_price: float, color:
         stop_price = low_price - price_offset
         take_price = high_price + bucket_size
 
-    logging.info(f'place order: side_factor={side_factor} price={init_price} bucket_size={bucket_size} '
+    logging.info(f'place order: side_factor={side_factor} init_price={init_price} bucket_size={bucket_size} '
                  f'stop={stop_price} take={take_price}')
 
-    # todo compute order size
-    qty = 1. * side_factor
-    logging.info(f'place order: qty={qty} ')
+    # compute order size
+    qty = math.floor(INIT_ORDER_SIZE_IN_BTC / (1 / min(init_price, stop_price) - 1 / max(init_price, stop_price))) * side_factor
+    logging.info(f'place order: compute qty={qty}')
 
     # todo save new order to db for get client_uid
     order_uid = uuid.uuid4().hex
@@ -76,6 +77,9 @@ def place_order(price_offset: float, low_price: float, high_price: float, color:
 
     response = 'dry run'
     if not dry_run:
+        if abs(qty) < 1:
+            logging.warning(f'too small qty computed={qty} - skip order')
+            return
         response = post_order(ticker, qty, init_price, order_uid)
         logging.info(f'post order to exchange resp={response}')
 
