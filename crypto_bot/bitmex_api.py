@@ -17,7 +17,7 @@ def get_buckets(ticker: str, count: int) -> list:
                                           reverse=True).result()[0]
 
 
-def post_order(ticker: str, qty: float, price: float, order_uid: str) -> dict:
+def post_init_order(ticker: str, qty: float, price: float, order_uid: str) -> dict:
     return client.Order.Order_new(symbol=ticker, orderQty=qty, ordType='Stop', stopPx=price, clOrdID=order_uid, text='Init order by supervisor.py').result()[0]
 
 

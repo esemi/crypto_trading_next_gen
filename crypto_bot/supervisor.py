@@ -14,11 +14,13 @@ import math
 import uuid
 from typing import Optional
 
-from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC
-from crypto_bot.bitmex_api import get_buckets, post_order
+from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC, \
+    STOP_ORDER_PRICE_OFFSET
+from crypto_bot.bitmex_api import get_buckets, post_init_order
+from crypto_bot.storage import add_init_order
 
 
-def check_need_new_order(ticker: str) -> Optional[dict]:
+def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
     """
     Если две старшие свечи отличаются по цвету от самой свежей - тогда вписываемся в сделку
     Возвращает словарь с данными свечки для входа или None, если входа нет
@@ -36,51 +38,59 @@ def check_need_new_order(ticker: str) -> Optional[dict]:
     logging.info(f'prepare buckets {prepared_buckets}')
 
     if last_buckets:
+        if force:
+            return prepared_buckets[0]
+
         if prepared_buckets[0]['color'] != prepared_buckets[1]['color'] and \
                 prepared_buckets[1]['color'] == prepared_buckets[2]['color']:
             return prepared_buckets[0]
     return
 
 
-def place_order(price_offset: float, low_price: float, high_price: float, color: str, ticker: str, dry_run: bool = False) -> Optional[dict]:
-    logging.info(f'place order: start low={low_price} high={high_price} {color} {ticker} price_offset={price_offset}')
-    # todo compute order price
+def place_order(init_price_offset: float, stop_price_offset: float, low_price: float, high_price: float, color: str,
+                ticker: str, dry_run: bool = False) -> Optional[dict]:
+    logging.info(
+        f'place order: start low={low_price} high={high_price} {color} {ticker} price_offset={init_price_offset}')
+
+    # compute order price
     bucket_size = high_price - low_price
-    if bucket_size <= price_offset:
+    if bucket_size <= init_price_offset:
         logging.warning(f'too small bucket={bucket_size} - skip order')
         return
 
     if color == RED_COLOR:
         # short order
         side_factor = -1.
-        init_price = low_price - price_offset
-        stop_price = high_price + price_offset
+        init_price = low_price - init_price_offset
+        stop_price = high_price + stop_price_offset
         take_price = low_price - bucket_size
 
     else:
         # long order
         side_factor = 1.
-        init_price = high_price + price_offset
-        stop_price = low_price - price_offset
+        init_price = high_price + init_price_offset
+        stop_price = low_price - stop_price_offset
         take_price = high_price + bucket_size
 
-    logging.info(f'place order: side_factor={side_factor} init_price={init_price} bucket_size={bucket_size} '
-                 f'stop={stop_price} take={take_price}')
+    logging.info(f'place order: side_factor={side_factor} init_price={init_price} stop_price_offset={stop_price_offset}'
+                 f' bucket_size={bucket_size} stop={stop_price} take={take_price}')
 
     # compute order size
-    qty = math.floor(INIT_ORDER_SIZE_IN_BTC / (1 / min(init_price, stop_price) - 1 / max(init_price, stop_price))) * side_factor
+    qty = math.floor(
+        INIT_ORDER_SIZE_IN_BTC / (1 / min(init_price, stop_price) - 1 / max(init_price, stop_price))
+    ) * side_factor
     logging.info(f'place order: compute qty={qty}')
 
-    # todo save new order to db for get client_uid
     order_uid = uuid.uuid4().hex
-    logging.info(f'place order: save order to db {order_uid}')
+    r = add_init_order(order_uid, stop_price, take_price)
+    logging.info(f'place order: save order to db {order_uid}; response={r}')
 
     response = 'dry run'
     if not dry_run:
         if abs(qty) < 1:
             logging.warning(f'too small qty computed={qty} - skip order')
             return
-        response = post_order(ticker, qty, init_price, order_uid)
+        response = post_init_order(ticker, qty, init_price, order_uid)
         logging.info(f'post order to exchange resp={response}')
 
     return {
@@ -96,27 +106,25 @@ def place_order(price_offset: float, low_price: float, high_price: float, color:
 def main(ticker: str):
     # todo infinite loop ?
 
-    # todo clear db?
-
     # todo clearing oldest orders
 
     # check need new order
-    bucket = check_need_new_order(ticker)
+    bucket = check_need_new_order(ticker, False)
     logging.info(f'check need new order {bucket}')
     if not bucket:
         return
 
-    # todo place new order and save TP/SL config for trader.py
-    order = place_order(price_offset=INIT_ORDER_PRICE_OFFSET, ticker=ticker, **bucket)
+    order = place_order(init_price_offset=INIT_ORDER_PRICE_OFFSET, stop_price_offset=STOP_ORDER_PRICE_OFFSET,
+                        ticker=ticker, **bucket)
     logging.info(f'place new order {order}')
     if not order:
         return
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG,
+                        datefmt='%Y-%m-%d %H:%M:%S')
 
     logging.info('start supervisor process--------------------------------------------')
     main(TICKER)
     logging.info('end supervisor process--------------------------------------------')
-
