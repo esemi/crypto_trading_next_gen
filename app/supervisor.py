@@ -16,8 +16,8 @@ from typing import Optional
 
 from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC, \
     STOP_ORDER_PRICE_OFFSET
-from crypto_bot.bitmex_api import get_buckets, post_init_order
-from crypto_bot.storage import add_init_order
+from bitmex_api import get_buckets, post_init_order
+from storage import add_init_order
 
 
 def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
@@ -106,7 +106,7 @@ def place_order(init_price_offset: float, stop_price_offset: float, low_price: f
 def main(ticker: str):
     # todo infinite loop ?
 
-    # todo clearing oldest orders
+    # todo clearing oldest orders (12h alive)
 
     # check need new order
     bucket = check_need_new_order(ticker, False)

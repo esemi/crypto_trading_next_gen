@@ -5,7 +5,6 @@ import logging
 import threading
 import time
 import urllib
-from pprint import pprint
 from queue import Queue, Empty
 from time import sleep
 from typing import Optional
@@ -14,10 +13,6 @@ import bitmex
 import websocket
 
 from configs import TEST_MODE, API_KEY, API_SECRET
-
-
-client_rest = None
-client_ws = None
 
 
 class CustomBitmexWS:
@@ -152,14 +147,6 @@ class CustomBitmexWS:
         yield self._events.get(block=True)
 
 
-def init_clients(test_mode: bool):
-    global client_rest, client_ws
-
-    client_rest = bitmex.bitmex(test=test_mode, api_key=API_KEY, api_secret=API_SECRET)
-    client_ws = CustomBitmexWS(endpoint=client_rest.swagger_spec.api_url, api_key=API_KEY,
-                               api_secret=API_SECRET)
-
-
 def get_buckets(ticker: str, count: int) -> list:
     return client_rest.Trade.Trade_getBucketed(binSize='1h', partial=False, symbol=ticker, count=count,
                                                reverse=True).result()[0]
@@ -170,4 +157,5 @@ def post_init_order(ticker: str, qty: float, price: float, order_uid: str) -> di
                                        text='Init order by supervisor.py').result()[0]
 
 
-init_clients(TEST_MODE)
+client_rest = bitmex.bitmex(test=TEST_MODE, api_key=API_KEY, api_secret=API_SECRET)
+client_ws = CustomBitmexWS(endpoint=client_rest.swagger_spec.api_url, api_key=API_KEY, api_secret=API_SECRET)
