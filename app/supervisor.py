@@ -17,7 +17,7 @@ from typing import Optional
 from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC, \
     STOP_ORDER_PRICE_OFFSET
 from bitmex_api import get_buckets, post_init_order
-from storage import add_init_order
+from storage import add_init_order, gen_uid
 
 
 def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
@@ -81,7 +81,7 @@ def place_order(init_price_offset: float, stop_price_offset: float, low_price: f
     ) * side_factor
     logging.info(f'place order: compute qty={qty}')
 
-    order_uid = uuid.uuid4().hex
+    order_uid = gen_uid()
     r = add_init_order(order_uid, stop_price, take_price)
     logging.info(f'place order: save order to db {order_uid}; response={r}')
 
