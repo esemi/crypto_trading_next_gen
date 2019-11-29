@@ -11,13 +11,12 @@
 
 import logging
 import math
-import uuid
 from typing import Optional
 
-from configs import TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC, \
-    STOP_ORDER_PRICE_OFFSET
-from bitmex_api import get_buckets, post_init_order
-from storage import add_init_order, gen_uid
+from configs import (TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC,
+                     STOP_ORDER_PRICE_OFFSET)
+from .bitmex_api import get_buckets, post_init_order
+from .storage import add_init_order, gen_uid
 
 
 def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
@@ -34,7 +33,7 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
         'low_price': i['low'],
         'high_price': i['high'],
         'color': GREEN_COLOR if i['open'] <= i['close'] else RED_COLOR
-    } for i in list(last_buckets) if i['open'] != i['close']]
+    } for i in list(last_buckets)]
     logging.info(f'prepare buckets {prepared_buckets}')
 
     if last_buckets:

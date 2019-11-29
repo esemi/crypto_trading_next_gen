@@ -11,9 +11,9 @@ import logging
 import signal
 import sys
 
-from bitmex_api import client_ws
+from .bitmex_api import client_ws
 from configs import TICKER
-from storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
+from .storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
 
 KEYBOARD_INTERRUPT = False
 INTERRUPT_SAFE = False

@@ -1,6 +1,6 @@
 import time
 
-from app.configs import TICKER, GREEN_COLOR
+from configs import TICKER, GREEN_COLOR
 from app.bitmex_api import client_ws
 from app.supervisor import place_order
 

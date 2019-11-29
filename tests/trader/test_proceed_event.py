@@ -1,5 +1,5 @@
-from storage import add_init_order, get_init_order, get_profit_order, client_redis, _profit_order_key
-from trader import proceed_event
+from app.storage import add_init_order, get_init_order, get_profit_order, client_redis, _profit_order_key
+from app.trader import proceed_event
 
 
 def test_proceed_unknown_order():
