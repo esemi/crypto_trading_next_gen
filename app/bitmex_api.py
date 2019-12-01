@@ -152,9 +152,22 @@ def get_buckets(ticker: str, count: int) -> list:
                                                reverse=True).result()[0]
 
 
-def post_init_order(ticker: str, qty: float, price: float, order_uid: str) -> dict:
+def post_stop_order(ticker: str, qty: float, price: float, order_uid: str, comment: str = '') -> dict:
     return client_rest.Order.Order_new(symbol=ticker, orderQty=qty, ordType='Stop', stopPx=price, clOrdID=order_uid,
-                                       text='Init order by supervisor.py').result()[0]
+                                       text=comment).result()[0]
+
+
+def post_limit_order(ticker: str, qty: float, price: float, order_uid: str, comment: str = '') -> dict:
+    return client_rest.Order.Order_new(symbol=ticker, orderQty=qty, ordType='LimitIfTouched', stopPx=price, price=price,
+                                       clOrdID=order_uid, text=comment).result()[0]
+
+
+def cancel_order(order_uid: str, comment: str) -> dict:
+    return client_rest.Order.Order_cancel(clOrdID=order_uid, text=comment).result()[0]
+
+
+def cancel_all(comment: str) -> dict:
+    return client_rest.Order.Order_cancelAll(text=comment).result()
 
 
 client_rest = bitmex.bitmex(test=TEST_MODE, api_key=API_KEY, api_secret=API_SECRET)

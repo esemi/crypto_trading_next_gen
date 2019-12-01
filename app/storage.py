@@ -23,8 +23,9 @@ def gen_uid() -> str:
     return uuid.uuid4().hex
 
 
-def add_init_order(uid: str, stop_price: float, take_price: float):
-    return client_redis.hmset(_init_order_key(uid), {'stop': stop_price, 'take': take_price})
+def add_init_order(uid: str, stop_price: float, take_price: float, qty: float, color: str, ticker: str):
+    return client_redis.hmset(_init_order_key(uid), {'stop': stop_price, 'take': take_price, 'qty': qty,
+                                                     'color': color, 'ticker': ticker})
 
 
 def add_profit_order(uid: str, pair_uid: str, parent_order_uid: str):

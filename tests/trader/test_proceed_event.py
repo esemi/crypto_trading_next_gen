@@ -1,5 +1,6 @@
 from app.storage import add_init_order, get_init_order, get_profit_order, client_redis, _profit_order_key
 from app.trader import proceed_event
+from configs import GREEN_COLOR, TICKER
 
 
 def test_proceed_unknown_order():
@@ -11,7 +12,7 @@ def test_proceed_init_order():
     client_redis.flushall()
 
     init_uid = 'init_order_uid'
-    add_init_order(init_uid, 100, 200)
+    add_init_order(init_uid, 100, 200, 13, GREEN_COLOR, TICKER)
 
     resp = proceed_event(init_uid, True)
     assert resp == 'proceed init order'
@@ -25,11 +26,6 @@ def test_proceed_init_order():
     assert get_profit_order(second_order) == first_order
 
 
-def test_proceed_init_order_real():
-    client_redis.flushall()
-
-    init_uid = 'init_order_uid'
-    add_init_order(init_uid, 100, 200)
-
-    resp = proceed_event(init_uid, False)
-    assert resp == 'proceed init order'
+def test_proceed_profit_order():
+    # todo
+    pass

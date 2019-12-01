@@ -11,8 +11,8 @@ import logging
 import signal
 import sys
 
-from .bitmex_api import client_ws
-from configs import TICKER
+from configs import GREEN_COLOR
+from .bitmex_api import client_ws, post_stop_order, post_limit_order, cancel_order
 from .storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
 
 KEYBOARD_INTERRUPT = False
@@ -33,8 +33,8 @@ def proceed_event(current_event_uid: str, dry_run: bool = False) -> str:
     logging.info(f'fetch new order event {current_event_uid}')
 
     init_order_info = get_init_order(current_event_uid)
-    profit_order_paid_uid = get_profit_order(current_event_uid)
-    logging.info(f'fetch orders by event init={init_order_info} profit_pair={profit_order_paid_uid}')
+    profit_order_pair_uid = get_profit_order(current_event_uid)
+    logging.info(f'fetch orders by event init={init_order_info} profit_pair={profit_order_pair_uid}')
 
     if init_order_info:
         logging.info('process init order filled')
@@ -46,9 +46,8 @@ def proceed_event(current_event_uid: str, dry_run: bool = False) -> str:
         add_profit_order(take_uid, stop_uid, current_event_uid)
         logging.info(f'save profit orders to storage stop={stop_uid} take={take_uid}')
 
-        if not dry_run:
-            # todo place stop and take orders
-            pass
+        orders_resp = place_orders_profit(**init_order_info, dry_run=dry_run, stop_uid=stop_uid, take_uid=take_uid)
+        logging.info(f'place profit orders={orders_resp}')
 
         # rm init order from storage
         del_init_order(current_event_uid)
@@ -56,23 +55,64 @@ def proceed_event(current_event_uid: str, dry_run: bool = False) -> str:
 
         return 'proceed init order'
 
-    elif profit_order_paid_uid:
+    elif profit_order_pair_uid:
         logging.info('process profit order filled')
 
+        # cancel pair order
         if not dry_run:
-            # todo cancel pair order
-            pass
+            cancel_resp = cancel_order(profit_order_pair_uid, comment='Cancel order by trader.py')
+            logging.info(f'cancel order={profit_order_pair_uid} {cancel_resp}')
 
         # rm stop and take orders from db
         del_profit_order(current_event_uid)
-        del_profit_order(profit_order_paid_uid)
+        del_profit_order(profit_order_pair_uid)
 
     else:
-        logging.error('NOT FOUND ORDER INTO STORAGE!')
+        logging.warning('NOT FOUND ORDER INTO STORAGE!')
         return 'not found order'
 
 
-def main(ticker: str):
+def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker: str, stop_uid: str, take_uid: str,
+                        dry_run: bool = False) -> dict:
+
+    take_price = float(take)
+    stop_price = float(stop)
+    qty = float(qty)
+    logging.info(f'place profit orders take_price={take_price}, stop_price={stop_price}, qty={qty}, color={color}, '
+                 f'ticker={ticker}')
+
+    if color == GREEN_COLOR:
+        qty *= -1.
+
+    stop_resp = take_resp = 'dry run'
+
+    logging.info(f'place stop order {ticker}: qty={qty}, stop_price={stop_price}, stop_uid={stop_uid}')
+    if not dry_run:
+        stop_resp = post_stop_order(ticker, qty, stop_price, stop_uid, comment='Stop order by trader.py')
+        logging.info(f'exchange resp for stop order={stop_resp}')
+
+    logging.info(f'place limit order {ticker}: qty={qty}, price={take_price}, take_uid={take_uid}')
+    if not dry_run:
+        take_resp = post_limit_order(ticker, qty, take_price, take_uid, comment='Profit order by trader.py')
+        logging.info(f'exchange resp for take profit order={take_resp}')
+
+    return dict(
+        stop=dict(
+            response=stop_resp,
+            qty=qty,
+            uid=stop_uid,
+            price=stop_price
+        ),
+        take=dict(
+            response=take_resp,
+            qty=qty,
+            uid=take_uid,
+            price=take_price
+        )
+    )
+
+
+def main():
     global INTERRUPT_SAFE
 
     signal.signal(signal.SIGINT, sigint_handler)
@@ -92,5 +132,5 @@ if __name__ == '__main__':
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     logging.info('start trader process')
-    main(TICKER)
+    main()
     logging.info('end trader process')
