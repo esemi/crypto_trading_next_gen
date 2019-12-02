@@ -1,1 +1,1 @@
-01	*	*	*	*	./venv/bin/python ./crypto_bot/supervisor.py >> ~/crypto_bot_supervisor.log 2>&1
+01	*	*	*	*	/home/esemi/development/crypto_trading_next_gen/venv/bin/python /home/esemi/development/crypto_trading_next_gen/app/supervisor.py >> /home/esemi/development/crypto_trading_next_gen/crypto_bot_supervisor.log 2>&1

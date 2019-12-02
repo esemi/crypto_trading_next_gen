@@ -13,10 +13,10 @@ import logging
 import math
 from typing import Optional
 
+from bitmex_rest import get_buckets, post_stop_order
 from configs import (TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC,
                      STOP_ORDER_PRICE_OFFSET)
-from .bitmex_api import get_buckets, post_stop_order
-from .storage import add_init_order, gen_uid
+from storage import add_init_order, gen_uid
 
 
 def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
@@ -102,13 +102,13 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, low_pri
     }
 
 
-def main(ticker: str):
+def main(ticker: str, force_entry: bool = False):
     # todo infinite loop ?
 
     # todo clearing oldest orders (12h alive)
 
     # check need new order
-    bucket = check_need_new_order(ticker, False)
+    bucket = check_need_new_order(ticker, force_entry)
     logging.info(f'check need new order {bucket}')
     if not bucket:
         return

@@ -1,8 +1,8 @@
-from configs import RED_COLOR, GREEN_COLOR, TICKER
+from app.configs import RED_COLOR, GREEN_COLOR, TICKER
 from app.storage import get_init_order
 from app.supervisor import place_order_init
 
-offset = 1.
+offset = 2.
 
 
 def test_small_bucket():
@@ -53,7 +53,7 @@ def test_success_red():
 
 
 def test_real_place_order():
-    r = place_order_init(offset, offset, 4300, 4700, RED_COLOR, TICKER, False)
+    r = place_order_init(offset, offset, 7276, 7307, GREEN_COLOR, TICKER, False)
     assert isinstance(r, dict)
     assert 'qty' in r
     assert 'init_price' in r

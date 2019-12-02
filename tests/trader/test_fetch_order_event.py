@@ -1,11 +1,12 @@
 import time
 
-from configs import TICKER, GREEN_COLOR
-from app.bitmex_api import client_ws
+from app.configs import TICKER, GREEN_COLOR
+from app.bitmex_ws import connect
 from app.supervisor import place_order_init
 
 
 def test_smoke():
+    client_ws = connect()
     last_event = client_ws.get_event()
     assert last_event is None
 

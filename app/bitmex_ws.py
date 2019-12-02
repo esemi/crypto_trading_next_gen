@@ -9,10 +9,9 @@ from queue import Queue, Empty
 from time import sleep
 from typing import Optional
 
-import bitmex
 import websocket
 
-from configs import TEST_MODE, API_KEY, API_SECRET
+from configs import API_KEY, API_SECRET
 
 
 class CustomBitmexWS:
@@ -92,18 +91,19 @@ class CustomBitmexWS:
     def __prepare_wss_endpoint(endpoint: str):
         url_parts: list = list(urllib.parse.urlparse(endpoint))
         url_parts[0] = url_parts[0].replace('http', 'ws')
-        url_parts[2] = "/realtime?subscribe=order"
+        url_parts[2] = "/realtime?subscribe=order,trade:XBTUSD"
         return urllib.parse.urlunparse(url_parts)
 
     def __on_message(self, message):
         """Handler for parsing WS messages."""
 
         message = json.loads(message)
-        self.logger.info(f'receive message: {json.dumps(message)}')
 
         table = message.get("table")
         action = message.get("action")
         source = message.get('data')
+        self.logger.debug(f'receive message: {json.dumps(message)}')
+
         if table == 'order' and action in ('insert', 'update') and source:
             self.logger.info(f'{table}-{action}: new event {source}')
             for source_event in source:
@@ -147,28 +147,6 @@ class CustomBitmexWS:
         yield self._events.get(block=True)
 
 
-def get_buckets(ticker: str, count: int) -> list:
-    return client_rest.Trade.Trade_getBucketed(binSize='1h', partial=False, symbol=ticker, count=count,
-                                               reverse=True).result()[0]
-
-
-def post_stop_order(ticker: str, qty: float, price: float, order_uid: str, comment: str = '') -> dict:
-    return client_rest.Order.Order_new(symbol=ticker, orderQty=qty, ordType='Stop', stopPx=price, clOrdID=order_uid,
-                                       text=comment).result()[0]
-
-
-def post_limit_order(ticker: str, qty: float, price: float, order_uid: str, comment: str = '') -> dict:
-    return client_rest.Order.Order_new(symbol=ticker, orderQty=qty, ordType='LimitIfTouched', stopPx=price, price=price,
-                                       clOrdID=order_uid, text=comment).result()[0]
-
-
-def cancel_order(order_uid: str, comment: str) -> dict:
-    return client_rest.Order.Order_cancel(clOrdID=order_uid, text=comment).result()[0]
-
-
-def cancel_all(comment: str) -> dict:
-    return client_rest.Order.Order_cancelAll(text=comment).result()
-
-
-client_rest = bitmex.bitmex(test=TEST_MODE, api_key=API_KEY, api_secret=API_SECRET)
-client_ws = CustomBitmexWS(endpoint=client_rest.swagger_spec.api_url, api_key=API_KEY, api_secret=API_SECRET)
+def connect() -> CustomBitmexWS:
+    from bitmex_rest import client_rest
+    return CustomBitmexWS(endpoint=client_rest.swagger_spec.api_url, api_key=API_KEY, api_secret=API_SECRET)

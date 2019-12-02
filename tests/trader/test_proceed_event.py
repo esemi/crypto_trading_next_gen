@@ -1,6 +1,6 @@
 from app.storage import add_init_order, get_init_order, get_profit_order, client_redis, _profit_order_key
 from app.trader import proceed_event
-from configs import GREEN_COLOR, TICKER
+from app.configs import GREEN_COLOR, TICKER
 
 
 def test_proceed_unknown_order():

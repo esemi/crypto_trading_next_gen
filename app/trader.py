@@ -12,20 +12,22 @@ import signal
 import sys
 
 from configs import GREEN_COLOR
-from .bitmex_api import client_ws, post_stop_order, post_limit_order, cancel_order
-from .storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
+from bitmex_ws import connect
+from bitmex_rest import post_stop_order, post_limit_order, cancel_order
+from storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
 
 KEYBOARD_INTERRUPT = False
 INTERRUPT_SAFE = False
+WS_CLIENT = connect()
 
 
 def sigint_handler(signal, frame):
-    global KEYBOARD_INTERRUPT, INTERRUPT_SAFE
+    global KEYBOARD_INTERRUPT, INTERRUPT_SAFE, WS_CLIENT
     logging.warning(f'handle interrupt sig {signal} {INTERRUPT_SAFE}')
     if INTERRUPT_SAFE:
         KEYBOARD_INTERRUPT = True
     else:
-        client_ws.exit()
+        WS_CLIENT.exit()
         sys.exit(0)
 
 
@@ -66,6 +68,7 @@ def proceed_event(current_event_uid: str, dry_run: bool = False) -> str:
         # rm stop and take orders from db
         del_profit_order(current_event_uid)
         del_profit_order(profit_order_pair_uid)
+        return 'proceed profit order'
 
     else:
         logging.warning('NOT FOUND ORDER INTO STORAGE!')
@@ -118,17 +121,18 @@ def main():
     signal.signal(signal.SIGINT, sigint_handler)
 
     events_processed = 0
-    for current_event in client_ws.iter_events():
-        logging.info('start process event--------------------------------------------')
-        INTERRUPT_SAFE = True
-        events_processed += 1
-        res = proceed_event(current_event['uid'])
-        INTERRUPT_SAFE = False
-        logging.info(f'end process event={res}---------------------------------------------------')
+    while True:
+        for current_event in WS_CLIENT.iter_events():
+            logging.info('start process event--------------------------------------------')
+            INTERRUPT_SAFE = True
+            events_processed += 1
+            res = proceed_event(current_event['uid'])
+            INTERRUPT_SAFE = False
+            logging.info(f'end process event={res}---------------------------------------------------')
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG,
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     logging.info('start trader process')
