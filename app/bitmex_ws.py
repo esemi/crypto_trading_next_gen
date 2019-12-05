@@ -149,4 +149,5 @@ class CustomBitmexWS:
 
 def connect() -> CustomBitmexWS:
     from bitmex_rest import client_rest
+    logging.info(f'connect to {client_rest.swagger_spec.api_url} by {API_KEY}')
     return CustomBitmexWS(endpoint=client_rest.swagger_spec.api_url, api_key=API_KEY, api_secret=API_SECRET)

@@ -7,6 +7,7 @@
 Служит затем, чтобы оперативно выставлять/снимать заявки тейка/стопа
 
 """
+import argparse
 import logging
 import signal
 import sys
@@ -18,7 +19,7 @@ from storage import get_init_order, get_profit_order, gen_uid, add_profit_order,
 
 KEYBOARD_INTERRUPT = False
 INTERRUPT_SAFE = False
-WS_CLIENT = connect()
+WS_CLIENT = None
 
 
 def sigint_handler(signal, frame):
@@ -27,7 +28,8 @@ def sigint_handler(signal, frame):
     if INTERRUPT_SAFE:
         KEYBOARD_INTERRUPT = True
     else:
-        WS_CLIENT.exit()
+        if WS_CLIENT:
+            WS_CLIENT.exit()
         sys.exit(0)
 
 
@@ -116,7 +118,8 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
 
 
 def main():
-    global INTERRUPT_SAFE
+    global INTERRUPT_SAFE, WS_CLIENT
+    WS_CLIENT = connect()
 
     signal.signal(signal.SIGINT, sigint_handler)
 
@@ -134,7 +137,6 @@ def main():
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
-
     logging.info('start trader process')
     main()
     logging.info('end trader process')
