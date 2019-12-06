@@ -7,14 +7,16 @@
 Служит затем, чтобы оперативно выставлять/снимать заявки тейка/стопа
 
 """
-import argparse
 import logging
 import signal
 import sys
+import time
 
-from configs import GREEN_COLOR
-from bitmex_ws import connect
+from bravado.exception import HTTPServiceUnavailable
+
 from bitmex_rest import post_stop_order, post_limit_order, cancel_order
+from bitmex_ws import connect
+from configs import GREEN_COLOR, LIMIT_CALL_TRIES, LIMIT_CALL_TIMEOUT
 from storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
 
 KEYBOARD_INTERRUPT = False
@@ -93,13 +95,33 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
 
     logging.info(f'place stop order {ticker}: qty={qty}, stop_price={stop_price}, stop_uid={stop_uid}')
     if not dry_run:
-        stop_resp = post_stop_order(ticker, qty, stop_price, stop_uid, comment='Stop order by trader.py')
-        logging.info(f'exchange resp for stop order={stop_resp}')
+        try_num = 0
+        while True:
+            try_num += 1
+            try:
+                stop_resp = post_stop_order(ticker, qty, stop_price, stop_uid, comment='Stop order by trader.py')
+                logging.info(f'exchange resp for stop order={stop_resp}')
+            except HTTPServiceUnavailable as e:
+                logging.info(f'exchange exception={e}')
+                if try_num < LIMIT_CALL_TRIES:
+                    time.sleep(LIMIT_CALL_TIMEOUT)
+                else:
+                    raise e
 
     logging.info(f'place limit order {ticker}: qty={qty}, price={take_price}, take_uid={take_uid}')
     if not dry_run:
-        take_resp = post_limit_order(ticker, qty, take_price, take_uid, comment='Profit order by trader.py')
-        logging.info(f'exchange resp for take profit order={take_resp}')
+        try_num = 0
+        while True:
+            try_num += 1
+            try:
+                take_resp = post_limit_order(ticker, qty, take_price, take_uid, comment='Profit order by trader.py')
+                logging.info(f'exchange resp for take profit order={take_resp}')
+            except HTTPServiceUnavailable as e:
+                logging.info(f'exchange exception={e}')
+                if try_num < LIMIT_CALL_TRIES:
+                    time.sleep(LIMIT_CALL_TIMEOUT)
+                else:
+                    raise e
 
     return dict(
         stop=dict(
