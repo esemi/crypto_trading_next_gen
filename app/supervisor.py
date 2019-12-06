@@ -15,7 +15,7 @@ from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_order
 from configs import (TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC,
-                     STOP_ORDER_PRICE_OFFSET)
+                     STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET)
 from storage import add_init_order, gen_uid
 
 
@@ -46,8 +46,8 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
     return
 
 
-def place_order_init(init_price_offset: float, stop_price_offset: float, low_price: float, high_price: float, color: str,
-                     ticker: str, dry_run: bool = False) -> Optional[dict]:
+def place_order_init(init_price_offset: float, stop_price_offset: float, take_price_offset: float, low_price: float,
+                     high_price: float, color: str, ticker: str, dry_run: bool = False) -> Optional[dict]:
     logging.info(
         f'place order: start low={low_price} high={high_price} {color} {ticker} price_offset={init_price_offset}')
 
@@ -62,14 +62,14 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, low_pri
         side_factor = -1.
         init_price = low_price - init_price_offset
         stop_price = high_price + stop_price_offset
-        take_price = low_price - bucket_size
+        take_price = low_price - bucket_size - take_price_offset
 
     else:
         # long order
         side_factor = 1.
         init_price = high_price + init_price_offset
         stop_price = low_price - stop_price_offset
-        take_price = high_price + bucket_size
+        take_price = high_price + bucket_size + take_price_offset
 
     logging.info(f'place order: side_factor={side_factor} init_price={init_price} stop_price_offset={stop_price_offset}'
                  f' bucket_size={bucket_size} stop={stop_price} take={take_price}')
@@ -114,7 +114,7 @@ def main(ticker: str, force_entry: bool = False):
         return
 
     order = place_order_init(init_price_offset=INIT_ORDER_PRICE_OFFSET, stop_price_offset=STOP_ORDER_PRICE_OFFSET,
-                             ticker=ticker, **bucket)
+                             take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=ticker, **bucket)
     logging.info(f'place new order {order}')
     if not order:
         return
