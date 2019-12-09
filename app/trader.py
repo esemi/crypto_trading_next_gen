@@ -11,13 +11,16 @@ import logging
 import signal
 import sys
 import time
+from datetime import datetime
 
 from bravado.exception import HTTPServiceUnavailable
 
 from bitmex_rest import post_stop_order, post_limit_order, cancel_order
 from bitmex_ws import connect
-from configs import GREEN_COLOR, LIMIT_CALL_TRIES, LIMIT_CALL_TIMEOUT
+from configs import GREEN_COLOR, LIMIT_CALL_TRIES, LIMIT_CALL_TIMEOUT, TICKER, INIT_ORDER_PRICE_OFFSET, \
+    STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET
 from storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
+from supervisor import check_need_new_order, place_order_init
 
 KEYBOARD_INTERRUPT = False
 INTERRUPT_SAFE = False
@@ -86,7 +89,7 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
     stop_price = float(stop)
     qty = float(qty)
     logging.info(f'place profit orders take_price={take_price}, stop_price={stop_price}, qty={qty}, color={color}, '
-                 f'ticker={ticker}')
+                 f'ticker={ticker} {stop_uid} {take_uid}')
 
     if color == GREEN_COLOR:
         qty *= -1.
@@ -101,6 +104,7 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
             try:
                 stop_resp = post_stop_order(ticker, qty, stop_price, stop_uid, comment='Stop order by trader.py')
                 logging.info(f'exchange resp for stop order={stop_resp}')
+                break
             except HTTPServiceUnavailable as e:
                 logging.info(f'exchange exception={e}')
                 if try_num < LIMIT_CALL_TRIES:
@@ -116,6 +120,7 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
             try:
                 take_resp = post_limit_order(ticker, qty, take_price, take_uid, comment='Profit order by trader.py')
                 logging.info(f'exchange resp for take profit order={take_resp}')
+                break
             except HTTPServiceUnavailable as e:
                 logging.info(f'exchange exception={e}')
                 if try_num < LIMIT_CALL_TRIES:
@@ -145,15 +150,47 @@ def main():
 
     signal.signal(signal.SIGINT, sigint_handler)
 
+    init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
+
     events_processed = 0
     while True:
-        for current_event in WS_CLIENT.iter_events():
+
+        # auto reconnect to wss
+        if WS_CLIENT.exited:
+            logging.warning('reconnect to socket')
+            WS_CLIENT.exit()
+            WS_CLIENT = connect()
+
+        # post init order every hour
+        current_time = datetime.now()
+        offset_in_seconds = (current_time - init_order_start_time).total_seconds()
+        logging.info(f'check init order needed {init_order_start_time} {current_time} offset={offset_in_seconds}')
+        if offset_in_seconds >= 3600:
+            init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
+            bucket = check_need_new_order(TICKER)
+            logging.info(f'check need new order {bucket}')
+            if bucket:
+                INTERRUPT_SAFE = True
+                order = place_order_init(init_price_offset=INIT_ORDER_PRICE_OFFSET,
+                                         stop_price_offset=STOP_ORDER_PRICE_OFFSET,
+                                         take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=TICKER, **bucket)
+                logging.info(f'place new init order {order}')
+                INTERRUPT_SAFE = False
+
+        # post profit orders by filled event
+        while True:
+            current_event = WS_CLIENT.get_event()
+            if not current_event:
+                break
+
             logging.info('start process event--------------------------------------------')
             INTERRUPT_SAFE = True
             events_processed += 1
             res = proceed_event(current_event['uid'])
             INTERRUPT_SAFE = False
             logging.info(f'end process event={res}---------------------------------------------------')
+
+        time.sleep(1)
 
 
 if __name__ == '__main__':

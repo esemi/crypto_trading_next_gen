@@ -100,30 +100,3 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         'order_uid': order_uid,
         'response': response
     }
-
-
-def main(ticker: str, force_entry: bool = False):
-    # todo infinite loop ?
-
-    # todo clearing oldest orders (12h alive)
-
-    # check need new order
-    bucket = check_need_new_order(ticker, force_entry)
-    logging.info(f'check need new order {bucket}')
-    if not bucket:
-        return
-
-    order = place_order_init(init_price_offset=INIT_ORDER_PRICE_OFFSET, stop_price_offset=STOP_ORDER_PRICE_OFFSET,
-                             take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=ticker, **bucket)
-    logging.info(f'place new order {order}')
-    if not order:
-        return
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG,
-                        datefmt='%Y-%m-%d %H:%M:%S')
-
-    logging.info('start supervisor process--------------------------------------------')
-    main(TICKER)
-    logging.info('end supervisor process--------------------------------------------')

@@ -83,8 +83,8 @@ def test_success_red_real():
     """
     cancel_all(comment='unittest test_success_red_real')
 
-    stop_uid = ('red_stop_order' + gen_uid())[:36]
-    take_uid = ('red_take_order' + gen_uid())[:36]
+    stop_uid = gen_uid()[:36]
+    take_uid = gen_uid()[:36]
     r = place_orders_profit(90, 123, 20, RED_COLOR, TICKER, stop_uid, take_uid, False)
 
     assert r['stop']['uid'] == stop_uid

@@ -63,5 +63,5 @@ def deployment():
         run('rm -rf %s' % BACKUP_PATH)
     run('mv %s %s' % (APP_PATH, BACKUP_PATH))
     run('mv %s %s' % (DEPLOY_PATH, APP_PATH))
-    run('supervisorctl reload')
     run('supervisorctl restart crypto:*')
+

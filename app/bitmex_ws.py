@@ -125,6 +125,7 @@ class CustomBitmexWS:
 
         if not self.exited:
             self.logger.error("Error : %s" % error)
+            self.exit()
             raise websocket.WebSocketException(error)
 
     def __on_open(self):
@@ -134,7 +135,7 @@ class CustomBitmexWS:
 
     def __on_close(self):
         """Called on websocket close."""
-
+        self.exit()
         self.logger.info('Websocket Closed')
 
     def get_event(self) -> Optional[dict]:

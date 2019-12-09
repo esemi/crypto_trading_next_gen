@@ -1,3 +1,4 @@
 .env
 venv/
 build.tar.gz
+__pycache__
