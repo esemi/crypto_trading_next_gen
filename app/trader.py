@@ -11,7 +11,7 @@
 - снимает парный сто/тейк при исполнении одного из них
 
 """
-
+import argparse
 import logging
 import signal
 import sys
@@ -47,6 +47,7 @@ def main():
     signal.signal(signal.SIGINT, sigint_handler)
 
     init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
+    # clearing_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
 
     events_processed = 0
     while True:
@@ -58,10 +59,9 @@ def main():
             WS_CLIENT = connect()
 
         # post init order every hour
-        current_time = datetime.now()
-        offset_in_seconds = (current_time - init_order_start_time).total_seconds()
-        logging.debug(f'check init order needed {init_order_start_time=} {current_time=} {offset_in_seconds=}')
-        if offset_in_seconds >= INIT_ORDER_TIME_OFFSET:
+        init_order_process_timer = (datetime.now() - init_order_start_time).total_seconds()
+        logging.debug(f'check init order needed {init_order_process_timer=}')
+        if init_order_process_timer >= INIT_ORDER_TIME_OFFSET:
             init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
             bucket = check_need_new_order(TICKER)
             logging.info(f'check need new order {bucket}')
@@ -72,6 +72,8 @@ def main():
                                          take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=TICKER, **bucket)
                 logging.info(f'place new init order {order}')
                 INTERRUPT_SAFE = False
+
+        # todo clearing by timer
 
         # post profit orders by filled event
         while True:
@@ -90,7 +92,11 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.INFO,
+    parser = argparse.ArgumentParser(prog='crypto trader')
+    parser.add_argument('--debug', type=bool,  help='Show more logs', default=False)
+    params = parser.parse_args()
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
+                        level=logging.DEBUG if params.debug else logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
     logging.info('start trader process')
     main()
