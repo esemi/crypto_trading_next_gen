@@ -19,7 +19,8 @@ import time
 from datetime import datetime
 
 from bitmex_ws import connect
-from configs import TICKER, INIT_ORDER_PRICE_OFFSET, STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET
+from configs import TICKER, INIT_ORDER_PRICE_OFFSET, STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET, \
+    INIT_ORDER_TIME_OFFSET
 from event_driven_operations import proceed_event
 from init_order_operations import check_need_new_order, place_order_init
 
@@ -59,8 +60,8 @@ def main():
         # post init order every hour
         current_time = datetime.now()
         offset_in_seconds = (current_time - init_order_start_time).total_seconds()
-        logging.debug(f'check init order needed {init_order_start_time} {current_time} offset={offset_in_seconds}')
-        if offset_in_seconds >= 3600:
+        logging.debug(f'check init order needed {init_order_start_time=} {current_time=} {offset_in_seconds=}')
+        if offset_in_seconds >= INIT_ORDER_TIME_OFFSET:
             init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
             bucket = check_need_new_order(TICKER)
             logging.info(f'check need new order {bucket}')
@@ -81,9 +82,9 @@ def main():
             logging.info('start process event--------------------------------------------')
             INTERRUPT_SAFE = True
             events_processed += 1
-            res = proceed_event(current_event['uid'])
+            event_processing_result = proceed_event(current_event['uid'])
             INTERRUPT_SAFE = False
-            logging.info(f'end process event={res}---------------------------------------------------')
+            logging.info(f'end process {event_processing_result=}---------------------------------------------------')
 
         time.sleep(1)
 

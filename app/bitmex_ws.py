@@ -82,16 +82,16 @@ class CustomBitmexWS:
         signature = hmac.new(self.api_secret.encode('utf-8'), message, digestmod=hashlib.sha256).hexdigest()
 
         return [
-            "api-expires: " + str(expires),
-            "api-signature: " + signature,
-            "api-key:" + self.api_key
+            f'api-expires: {str(expires)}',
+            f'api-signature: {signature}',
+            f'api-key: {self.api_key}'
         ]
 
     @staticmethod
     def __prepare_wss_endpoint(endpoint: str):
         url_parts: list = list(urllib.parse.urlparse(endpoint))
         url_parts[0] = url_parts[0].replace('http', 'ws')
-        url_parts[2] = "/realtime?subscribe=order,trade:XBTUSD"
+        url_parts[2] = "/realtime?subscribe=order"
         # url_parts[2] .= ",trade:XBTUSD"
         return urllib.parse.urlunparse(url_parts)
 
