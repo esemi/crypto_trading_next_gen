@@ -92,6 +92,7 @@ class CustomBitmexWS:
         url_parts: list = list(urllib.parse.urlparse(endpoint))
         url_parts[0] = url_parts[0].replace('http', 'ws')
         url_parts[2] = "/realtime?subscribe=order,trade:XBTUSD"
+        # url_parts[2] .= ",trade:XBTUSD"
         return urllib.parse.urlunparse(url_parts)
 
     def __on_message(self, message):
@@ -118,7 +119,7 @@ class CustomBitmexWS:
                 self.logger.info(f'add new event={event}')
 
         else:
-            self.logger.info('message ignored')
+            self.logger.debug('message ignored')
 
     def __on_error(self, error):
         """Called on fatal websocket errors. We exit on these."""

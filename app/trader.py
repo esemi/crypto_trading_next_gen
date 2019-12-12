@@ -164,7 +164,7 @@ def main():
         # post init order every hour
         current_time = datetime.now()
         offset_in_seconds = (current_time - init_order_start_time).total_seconds()
-        logging.info(f'check init order needed {init_order_start_time} {current_time} offset={offset_in_seconds}')
+        logging.debug(f'check init order needed {init_order_start_time} {current_time} offset={offset_in_seconds}')
         if offset_in_seconds >= 3600:
             init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
             bucket = check_need_new_order(TICKER)
