@@ -13,7 +13,7 @@ import sys
 import time
 from datetime import datetime
 
-from bravado.exception import HTTPServiceUnavailable
+from bravado.exception import HTTPServerError
 
 from bitmex_rest import post_stop_order, post_limit_order, cancel_order
 from bitmex_ws import connect
@@ -105,7 +105,7 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
                 stop_resp = post_stop_order(ticker, qty, stop_price, stop_uid, comment='Stop order by trader.py')
                 logging.info(f'exchange resp for stop order={stop_resp}')
                 break
-            except HTTPServiceUnavailable as e:
+            except HTTPServerError as e:
                 logging.info(f'exchange exception={e}')
                 if try_num < LIMIT_CALL_TRIES:
                     time.sleep(LIMIT_CALL_TIMEOUT)
@@ -121,7 +121,7 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
                 take_resp = post_limit_order(ticker, qty, take_price, take_uid, comment='Profit order by trader.py')
                 logging.info(f'exchange resp for take profit order={take_resp}')
                 break
-            except HTTPServiceUnavailable as e:
+            except HTTPServerError as e:
                 logging.info(f'exchange exception={e}')
                 if try_num < LIMIT_CALL_TRIES:
                     time.sleep(LIMIT_CALL_TIMEOUT)
