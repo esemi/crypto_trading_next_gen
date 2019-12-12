@@ -1,6 +1,6 @@
 from app.bitmex_rest import cancel_all
 from app.storage import gen_uid
-from app.trader import place_orders_profit
+from app.event_driven_operations import place_orders_profit
 from app.configs import TICKER, GREEN_COLOR, RED_COLOR
 
 

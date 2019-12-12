@@ -2,7 +2,7 @@ import time
 
 from app.configs import TICKER, GREEN_COLOR
 from app.bitmex_ws import connect
-from app.supervisor import place_order_init
+from app.init_order_operations import place_order_init
 
 
 def test_smoke():

@@ -1,21 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Скрипт запускается раз в час
-- чистит протухшие заявки и выставляет новые;
-- определяет, нужно ли выставлять новый ордер в зависимости от 3х последних часовых свечей;
-- если нужно - считает параметры тейка/стопа, записывает новую строчку в лист ожидания и выставляет ордер.
-
-"""
-
 import logging
 import math
 from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_order
-from configs import (TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC,
-                     STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET)
+from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC)
 from storage import add_init_order, gen_uid
 
 
