@@ -9,19 +9,19 @@ $ pip install -r requirements/common.txt
 $ cp configs/stage.env .env
 ```
 
-### Run tests
+### Tests
 ```
 pytest -s -v tests
 ```
 
 
-### Run once
+### Run local
 ```
-$ ./app/trader.py
+$ ./app/trader.py --debug=True
 ```
 
 
 ### Run on production
 ```
-supervisor run app/trader.py
+@see etc/*.conf
 ```

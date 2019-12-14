@@ -75,7 +75,7 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
         while True:
             try_num += 1
             try:
-                stop_resp = post_stop_order(ticker, qty, stop_price, stop_uid, comment='Stop order by trader.py')
+                stop_resp = post_stop_order(ticker, qty, stop_price, stop_price, stop_uid, comment='Stop order by trader.py')
                 logging.info(f'exchange resp for stop order={stop_resp}')
                 break
             except HTTPServerError as e:

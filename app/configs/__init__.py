@@ -30,7 +30,9 @@ TICKER = _env('TICKER', None, str)
 INIT_ORDER_TIME_OFFSET = 3600
 
 # Раз в сколько секунд клирим старые ордера
-CLEARING_TIME_OFFSET = 7200
+CLEARING_TIME_OFFSET = 3600
+# Время жизни ордера на бирже в секундах
+CLEARING_ORDER_LIFETIME = 12 * 60 * 60
 
 # Отступ в долларах от цены свечи для ордера на вход в сделку
 INIT_ORDER_PRICE_OFFSET = 2.

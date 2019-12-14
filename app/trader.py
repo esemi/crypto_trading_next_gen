@@ -20,7 +20,7 @@ from datetime import datetime
 
 from bitmex_ws import connect
 from configs import TICKER, INIT_ORDER_PRICE_OFFSET, STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET, \
-    INIT_ORDER_TIME_OFFSET
+    INIT_ORDER_TIME_OFFSET, CLEARING_TIME_OFFSET
 from event_driven_operations import proceed_event
 from init_order_operations import check_need_new_order, place_order_init
 
@@ -47,7 +47,7 @@ def main():
     signal.signal(signal.SIGINT, sigint_handler)
 
     init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
-    # clearing_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
+    clearing_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
 
     events_processed = 0
     while True:
@@ -57,6 +57,20 @@ def main():
             logging.warning('reconnect to socket')
             WS_CLIENT.exit()
             WS_CLIENT = connect()
+
+        # clearing by timer
+        clearing_process_timer = (datetime.now() - clearing_start_time).total_seconds()
+        logging.debug(f'check clearing time needed {clearing_process_timer=}')
+        if clearing_process_timer >= CLEARING_TIME_OFFSET:
+            # todo get all orders
+            # todo for order in orders:
+            #     todo check order time and status
+            #     todo что делать с частично заполненными ордерами?
+            #     todo if order.lifetime >= CLEARING_ORDER_LIFETIME
+            #           cancel_order()
+            #           if canceled:
+            #                  remove from storage
+            pass
 
         # post init order every hour
         init_order_process_timer = (datetime.now() - init_order_start_time).total_seconds()
@@ -72,8 +86,6 @@ def main():
                                          take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=TICKER, **bucket)
                 logging.info(f'place new init order {order}')
                 INTERRUPT_SAFE = False
-
-        # todo clearing by timer
 
         # post profit orders by filled event
         while True:
