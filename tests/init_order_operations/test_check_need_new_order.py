@@ -1,5 +1,5 @@
 from app.configs import RED_COLOR, GREEN_COLOR, TICKER
-from app.supervisor import check_need_new_order
+from app.init_order_operations import check_need_new_order
 
 
 def test_valid_response():

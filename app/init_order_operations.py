@@ -1,21 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Скрипт запускается раз в час
-- чистит протухшие заявки и выставляет новые;
-- определяет, нужно ли выставлять новый ордер в зависимости от 3х последних часовых свечей;
-- если нужно - считает параметры тейка/стопа, записывает новую строчку в лист ожидания и выставляет ордер.
-
-"""
-
 import logging
 import math
 from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_order
-from configs import (TICKER, RED_COLOR, GREEN_COLOR, INIT_ORDER_PRICE_OFFSET, INIT_ORDER_SIZE_IN_BTC,
-                     STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET)
+from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC)
 from storage import add_init_order, gen_uid
 
 
@@ -60,23 +51,25 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
     if color == RED_COLOR:
         # short order
         side_factor = -1.
-        init_price = low_price - init_price_offset
+        init_trigger_price = low_price - init_price_offset
+        init_order_price = low_price
         stop_price = high_price + stop_price_offset
         take_price = low_price - bucket_size - take_price_offset
 
     else:
         # long order
         side_factor = 1.
-        init_price = high_price + init_price_offset
+        init_trigger_price = high_price + init_price_offset
+        init_order_price = high_price
         stop_price = low_price - stop_price_offset
         take_price = high_price + bucket_size + take_price_offset
 
-    logging.info(f'place order: side_factor={side_factor} init_price={init_price} stop_price_offset={stop_price_offset}'
+    logging.info(f'place order: side_factor={side_factor} init_price={init_trigger_price} stop_price_offset={stop_price_offset}'
                  f' bucket_size={bucket_size} stop={stop_price} take={take_price}')
 
     # compute order size
     qty = math.floor(
-        INIT_ORDER_SIZE_IN_BTC / (1 / min(init_price, stop_price) - 1 / max(init_price, stop_price))
+        INIT_ORDER_SIZE_IN_BTC / (1 / min(init_trigger_price, stop_price) - 1 / max(init_trigger_price, stop_price))
     ) * side_factor
     logging.info(f'place order: compute qty={qty}')
 
@@ -89,12 +82,13 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         if abs(qty) < 1:
             logging.warning(f'too small qty computed={qty} - skip order')
             return
-        response = post_stop_order(ticker, qty, init_price, order_uid, comment='Init order by supervisor.py')
+        response = post_stop_order(ticker, qty, init_trigger_price, init_order_price, order_uid,
+                                   comment='Init order by supervisor.py')
         logging.info(f'post order to exchange resp={response}')
 
     return {
         'qty': qty,
-        'init_price': init_price,
+        'init_price': init_trigger_price,
         'stop_price': stop_price,
         'take_price': take_price,
         'order_uid': order_uid,

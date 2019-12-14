@@ -1,6 +1,6 @@
 from app.configs import RED_COLOR, GREEN_COLOR, TICKER
 from app.storage import get_init_order
-from app.supervisor import place_order_init
+from app.init_order_operations import place_order_init
 
 offset = 2.
 
