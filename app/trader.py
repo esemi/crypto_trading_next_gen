@@ -52,12 +52,6 @@ def main():
     events_processed = 0
     while True:
 
-        # auto reconnect to wss
-        if WS_CLIENT.exited:
-            logging.warning('reconnect to socket')
-            WS_CLIENT.exit()
-            WS_CLIENT = connect()
-
         # clearing by timer
         clearing_process_timer = (datetime.now() - clearing_start_time).total_seconds()
         logging.debug(f'check clearing time needed {clearing_process_timer=}')
@@ -89,6 +83,11 @@ def main():
 
         # post profit orders by filled event
         while True:
+            # auto reconnect to wss
+            if WS_CLIENT.exited:
+                logging.warning('reconnect to socket')
+                WS_CLIENT = connect()
+
             current_event = WS_CLIENT.get_event()
             if not current_event:
                 break

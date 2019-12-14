@@ -11,7 +11,7 @@ def get_buckets(ticker: str, count: int) -> list:
 def post_stop_order(ticker: str, qty: float, trigger_price: float, order_price: float, order_uid: str, comment: str = '') -> dict:
     return client_rest.Order.Order_new(symbol=ticker, orderQty=qty, ordType='StopLimit', stopPx=trigger_price,
                                        execInst='LastPrice', price=order_price,
-                                       timeInForce='ImmediateOrCancel', clOrdID=order_uid, text=comment).result()[0]
+                                       timeInForce='GoodTillCancel', clOrdID=order_uid, text=comment).result()[0]
 
 
 def post_limit_order(ticker: str, qty: float, price: float, order_uid: str, comment: str = '') -> dict:

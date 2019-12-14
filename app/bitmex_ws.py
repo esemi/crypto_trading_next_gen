@@ -92,7 +92,7 @@ class CustomBitmexWS:
         url_parts: list = list(urllib.parse.urlparse(endpoint))
         url_parts[0] = url_parts[0].replace('http', 'ws')
         url_parts[2] = "/realtime?subscribe=order"
-        # url_parts[2] .= ",trade:XBTUSD"
+        url_parts[2] += ",trade:XBTUSD"
         return urllib.parse.urlunparse(url_parts)
 
     def __on_message(self, message):
