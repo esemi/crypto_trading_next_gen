@@ -106,7 +106,7 @@ class CustomBitmexWS:
         self.logger.debug(f'receive message: {json.dumps(message)}')
 
         if table == 'order' and action in ('insert', 'update') and source:
-            self.logger.info(f'{table}-{action}: new event {source}')
+            self.logger.debug(f'{table}-{action}: new event {source}')
             for source_event in source:
                 self.logger.info(f'process event {source_event}')
                 order_uid = source_event.get('clOrdID', '')
