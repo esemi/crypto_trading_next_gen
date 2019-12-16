@@ -51,19 +51,21 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
     if color == RED_COLOR:
         # short order
         side_factor = -1.
-        init_trigger_price = low_price - init_price_offset
+        init_order_price = low_price - init_price_offset
+        init_trigger_price = low_price
         stop_price = high_price + stop_price_offset
         take_price = low_price - (bucket_size * 2) - take_price_offset
 
     else:
         # long order
         side_factor = 1.
-        init_trigger_price = high_price + init_price_offset
+        init_order_price = high_price + init_price_offset
+        init_trigger_price = high_price
         stop_price = low_price - stop_price_offset
         take_price = high_price + (bucket_size * 2) + take_price_offset
 
-    logging.info(f'place order: side_factor={side_factor} init_price={init_trigger_price} stop_price_offset={stop_price_offset}'
-                 f' bucket_size={bucket_size} stop={stop_price} take={take_price}')
+    logging.info(f'place order: {side_factor=} {init_trigger_price=} {init_order_price=} '
+                 f'{stop_price_offset=} {bucket_size=} {stop_price=} {take_price=}')
 
     # compute order size
     qty = math.floor(
@@ -80,7 +82,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         if abs(qty) < 1:
             logging.warning(f'too small qty computed={qty} - skip order')
             return
-        response = post_stop_order(ticker, qty, init_trigger_price, init_trigger_price, order_uid,
+        response = post_stop_order(ticker, qty, init_trigger_price, init_order_price, order_uid,
                                    comment='Init order by supervisor.py')
         logging.info(f'post order to exchange resp={response}')
 
