@@ -37,7 +37,7 @@ CLEARING_ORDER_LIFETIME = 12 * 60 * 60
 # Отступ в долларах от цены свечи для ордера на вход в сделку
 INIT_ORDER_PRICE_OFFSET = 3.
 # Отступ в долларах от цены свечи для стоп-ордера
-STOP_ORDER_PRICE_OFFSET = 2.
+STOP_ORDER_PRICE_OFFSET = 1.
 # Отступ в долларах от цены свечи для тейк-ордера
 TAKE_ORDER_PRICE_OFFSET = 4.
 

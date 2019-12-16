@@ -5,7 +5,7 @@ import logging
 import math
 from typing import Optional
 
-from bitmex_rest import get_buckets, post_stop_order
+from bitmex_rest import get_buckets, post_stop_limit_order
 from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC)
 from storage import add_init_order, gen_uid
 
@@ -82,8 +82,8 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         if abs(qty) < 1:
             logging.warning(f'too small qty computed={qty} - skip order')
             return
-        response = post_stop_order(ticker, qty, init_trigger_price, init_order_price, order_uid,
-                                   comment='Init order by supervisor.py')
+        response = post_stop_limit_order(ticker, qty, init_trigger_price, init_order_price, order_uid,
+                                         comment='Init order by supervisor.py')
         logging.info(f'post order to exchange resp={response}')
 
     return {

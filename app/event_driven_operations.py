@@ -6,7 +6,7 @@ import time
 
 from bravado.exception import HTTPServerError
 
-from bitmex_rest import post_stop_order, post_limit_order, cancel_order
+from bitmex_rest import post_limit_order, cancel_order, post_stop_order
 from configs import GREEN_COLOR, LIMIT_CALL_TRIES, LIMIT_CALL_TIMEOUT
 from storage import get_init_order, get_profit_order, gen_uid, add_profit_order, del_init_order, del_profit_order
 
@@ -75,7 +75,7 @@ def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker
         while True:
             try_num += 1
             try:
-                stop_resp = post_stop_order(ticker, qty, stop_price, stop_price, stop_uid, comment='Stop order by trader.py')
+                stop_resp = post_stop_order(ticker, qty, stop_price, stop_uid, comment='Stop order by trader.py')
                 logging.info(f'exchange resp for stop order={stop_resp}')
                 break
             except HTTPServerError as e:
