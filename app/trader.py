@@ -46,8 +46,8 @@ def main():
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
-    clearing_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
+    init_order_start_time = datetime.now().replace(minute=0, second=20, microsecond=0)
+    clearing_start_time = datetime.now().replace(minute=40, second=0, microsecond=0)
 
     events_processed = 0
     while True:
@@ -70,7 +70,7 @@ def main():
         init_order_process_timer = (datetime.now() - init_order_start_time).total_seconds()
         logging.debug(f'check init order needed {init_order_process_timer=}')
         if init_order_process_timer >= INIT_ORDER_TIME_OFFSET:
-            init_order_start_time = datetime.now().replace(minute=1, second=0, microsecond=0)
+            init_order_start_time = datetime.now().replace(minute=0, second=20, microsecond=0)
             bucket = check_need_new_order(TICKER)
             logging.info(f'check need new order {bucket}')
             if bucket:

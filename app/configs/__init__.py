@@ -34,10 +34,12 @@ CLEARING_TIME_OFFSET = 3600
 # Время жизни ордера на бирже в секундах
 CLEARING_ORDER_LIFETIME = 12 * 60 * 60
 
+# Ограничение на размер свечи для входа
+INIT_ORDER_BUCKET_SIZE_INTERVAL = (5., 60.)
 # Отступ в долларах от цены свечи для ордера на вход в сделку
 INIT_ORDER_PRICE_OFFSET = 3.
 # Отступ в долларах от цены свечи для стоп-ордера
-STOP_ORDER_PRICE_OFFSET = 1.
+STOP_ORDER_PRICE_OFFSET = 0.
 # Отступ в долларах от цены свечи для тейк-ордера
 TAKE_ORDER_PRICE_OFFSET = 4.
 

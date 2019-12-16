@@ -6,7 +6,7 @@ import math
 from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_limit_order
-from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC)
+from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC, INIT_ORDER_BUCKET_SIZE_INTERVAL)
 from storage import add_init_order, gen_uid
 
 
@@ -28,12 +28,19 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
     logging.info(f'prepare buckets {prepared_buckets}')
 
     if last_buckets:
+        last_bucket = prepared_buckets[0]
         if force:
-            return prepared_buckets[0]
+            return last_bucket
 
-        if prepared_buckets[0]['color'] != prepared_buckets[1]['color'] and \
+        bucket_size = last_bucket['high_price'] - last_bucket['low_price']
+        logging.info(f'{bucket_size=} (allowed {INIT_ORDER_BUCKET_SIZE_INTERVAL})')
+        if bucket_size < INIT_ORDER_BUCKET_SIZE_INTERVAL[0] or bucket_size > INIT_ORDER_BUCKET_SIZE_INTERVAL[1]:
+            logging.warning(f'skip bucket by {bucket_size=}')
+            return
+
+        if last_bucket['color'] != prepared_buckets[1]['color'] and \
                 prepared_buckets[1]['color'] == prepared_buckets[2]['color']:
-            return prepared_buckets[0]
+            return last_bucket
     return
 
 
