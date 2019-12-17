@@ -34,8 +34,12 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
 
         bucket_size = last_bucket['high_price'] - last_bucket['low_price']
         logging.info(f'{bucket_size=} (allowed {INIT_ORDER_BUCKET_SIZE_INTERVAL})')
-        if bucket_size < INIT_ORDER_BUCKET_SIZE_INTERVAL[0] or bucket_size > INIT_ORDER_BUCKET_SIZE_INTERVAL[1]:
-            logging.warning(f'skip bucket by {bucket_size=}')
+
+        if INIT_ORDER_BUCKET_SIZE_INTERVAL[0] and bucket_size < INIT_ORDER_BUCKET_SIZE_INTERVAL[0]:
+            logging.warning(f'skip bucket by {bucket_size=} too small')
+            return
+        if INIT_ORDER_BUCKET_SIZE_INTERVAL[1] and bucket_size > INIT_ORDER_BUCKET_SIZE_INTERVAL[1]:
+            logging.warning(f'skip bucket by {bucket_size=} too big')
             return
 
         if last_bucket['color'] != prepared_buckets[1]['color'] and \
@@ -44,8 +48,9 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
     return
 
 
-def place_order_init(init_price_offset: float, stop_price_offset: float, take_price_offset: float, low_price: float,
-                     high_price: float, color: str, ticker: str, dry_run: bool = False) -> Optional[dict]:
+def place_order_init(init_price_offset: float, stop_price_offset: float, take_price_offset: float,
+                     take_price_factor: float, low_price: float, high_price: float, color: str, ticker: str,
+                     dry_run: bool = False) -> Optional[dict]:
     logging.info(
         f'place order: start low={low_price} high={high_price} {color} {ticker} price_offset={init_price_offset}')
 
@@ -61,7 +66,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         init_order_price = low_price - init_price_offset
         init_trigger_price = low_price
         stop_price = high_price + stop_price_offset
-        take_price = low_price - (bucket_size * 2) - take_price_offset
+        take_price = low_price - (bucket_size * take_price_factor) - take_price_offset
 
     else:
         # long order
@@ -69,7 +74,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         init_order_price = high_price + init_price_offset
         init_trigger_price = high_price
         stop_price = low_price - stop_price_offset
-        take_price = high_price + (bucket_size * 2) + take_price_offset
+        take_price = high_price + (bucket_size * take_price_factor) + take_price_offset
 
     logging.info(f'place order: {side_factor=} {init_trigger_price=} {init_order_price=} '
                  f'{stop_price_offset=} {bucket_size=} {stop_price=} {take_price=}')

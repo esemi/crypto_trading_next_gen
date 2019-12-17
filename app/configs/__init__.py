@@ -42,6 +42,8 @@ INIT_ORDER_PRICE_OFFSET = 3.
 STOP_ORDER_PRICE_OFFSET = 0.
 # Отступ в долларах от цены свечи для тейк-ордера
 TAKE_ORDER_PRICE_OFFSET = 4.
+# Множитель для размера свечи для тейк ордера
+TAKE_ORDER_PRICE_FACTOR = 2.
 
 # Размер ордера на вход в сделку, в BTC. Считается как 1% от депо в битках.
 INIT_ORDER_SIZE_IN_BTC = _env('INIT_ORDER_SIZE_IN_BTC', None, float)  # todo change for production

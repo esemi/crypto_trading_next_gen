@@ -20,7 +20,7 @@ from datetime import datetime
 
 from bitmex_ws import connect
 from configs import TICKER, INIT_ORDER_PRICE_OFFSET, STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET, \
-    INIT_ORDER_TIME_OFFSET, CLEARING_TIME_OFFSET
+    INIT_ORDER_TIME_OFFSET, CLEARING_TIME_OFFSET, TAKE_ORDER_PRICE_FACTOR
 from event_driven_operations import proceed_event
 from init_order_operations import check_need_new_order, place_order_init
 
@@ -77,7 +77,8 @@ def main():
                 INTERRUPT_SAFE = True
                 order = place_order_init(init_price_offset=INIT_ORDER_PRICE_OFFSET,
                                          stop_price_offset=STOP_ORDER_PRICE_OFFSET,
-                                         take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=TICKER, **bucket)
+                                         take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=TICKER,
+                                         take_price_factor=TAKE_ORDER_PRICE_FACTOR, **bucket)
                 logging.info(f'place new init order {order}')
                 INTERRUPT_SAFE = False
 
