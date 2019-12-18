@@ -6,7 +6,8 @@ import math
 from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_limit_order
-from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC, INIT_ORDER_BUCKET_SIZE_INTERVAL)
+from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC, INIT_ORDER_BUCKET_SIZE_INTERVAL,
+                     INIT_ORDER_TRIGGER_PRICE_OFFSET)
 from storage import add_init_order, gen_uid
 
 
@@ -64,7 +65,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         # short order
         side_factor = -1.
         init_order_price = low_price - init_price_offset
-        init_trigger_price = low_price
+        init_trigger_price = low_price - INIT_ORDER_TRIGGER_PRICE_OFFSET
         stop_price = high_price + stop_price_offset
         take_price = low_price - (bucket_size * take_price_factor) - take_price_offset
 
@@ -72,7 +73,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
         # long order
         side_factor = 1.
         init_order_price = high_price + init_price_offset
-        init_trigger_price = high_price
+        init_trigger_price = high_price + INIT_ORDER_TRIGGER_PRICE_OFFSET
         stop_price = low_price - stop_price_offset
         take_price = high_price + (bucket_size * take_price_factor) + take_price_offset
 
@@ -80,9 +81,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
                  f'{stop_price_offset=} {bucket_size=} {stop_price=} {take_price=}')
 
     # compute order size
-    qty = math.floor(
-        INIT_ORDER_SIZE_IN_BTC / (1 / min(init_trigger_price, stop_price) - 1 / max(init_trigger_price, stop_price))
-    ) * side_factor
+    qty = 1 * side_factor
     logging.info(f'place order: compute qty={qty}')
 
     order_uid = gen_uid()

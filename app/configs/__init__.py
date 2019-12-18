@@ -24,7 +24,7 @@ def _env(name: str, default=None, type_: Callable = str) -> Optional[Union[int, 
 TEST_MODE = _env('TEST_MODE', False, bool)
 API_KEY = _env('API_KEY', '', str)
 API_SECRET = _env('API_SECRET', '', str)
-TICKER = _env('TICKER', None, str)
+TICKER = 'ETHUSD'
 
 # Раз в сколько секунд проверяем свечи на вход
 INIT_ORDER_TIME_OFFSET = 3600
@@ -35,15 +35,17 @@ CLEARING_TIME_OFFSET = 3600
 CLEARING_ORDER_LIFETIME = 12 * 60 * 60
 
 # Ограничение на размер свечи для входа
-INIT_ORDER_BUCKET_SIZE_INTERVAL = (5., 60.)
-# Отступ в долларах от цены свечи для ордера на вход в сделку
-INIT_ORDER_PRICE_OFFSET = 3.
+INIT_ORDER_BUCKET_SIZE_INTERVAL = (0.49, 2.)
+# Отступ в долларах от цены свечи для ордера на вход в сделку (триггерная цена)
+INIT_ORDER_TRIGGER_PRICE_OFFSET = 0.05
+# Отступ в долларах от цены свечи для ордера на вход в сделку (цена ордера)
+INIT_ORDER_PRICE_OFFSET = 0.1
 # Отступ в долларах от цены свечи для стоп-ордера
 STOP_ORDER_PRICE_OFFSET = 0.
 # Отступ в долларах от цены свечи для тейк-ордера
-TAKE_ORDER_PRICE_OFFSET = 4.
+TAKE_ORDER_PRICE_OFFSET = 0.1
 # Множитель для размера свечи для тейк ордера
-TAKE_ORDER_PRICE_FACTOR = 2.
+TAKE_ORDER_PRICE_FACTOR = 3.
 
 # Размер ордера на вход в сделку, в BTC. Считается как 1% от депо в битках.
 INIT_ORDER_SIZE_IN_BTC = _env('INIT_ORDER_SIZE_IN_BTC', None, float)  # todo change for production

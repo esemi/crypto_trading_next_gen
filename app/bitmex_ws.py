@@ -11,7 +11,7 @@ from typing import Optional
 
 import websocket
 
-from configs import API_KEY, API_SECRET
+from configs import API_KEY, API_SECRET, TICKER
 
 
 class CustomBitmexWS:
@@ -92,7 +92,7 @@ class CustomBitmexWS:
         url_parts: list = list(urllib.parse.urlparse(endpoint))
         url_parts[0] = url_parts[0].replace('http', 'ws')
         url_parts[2] = "/realtime?subscribe=order"
-        url_parts[2] += ",trade:XBTUSD"
+        url_parts[2] += f',trade:{TICKER}'
         return urllib.parse.urlunparse(url_parts)
 
     def __on_message(self, message):
