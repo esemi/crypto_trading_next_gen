@@ -63,7 +63,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
 
     if color == RED_COLOR:
         # short order
-        side_factor = -1.
+        side_factor = 1.
         init_order_price = low_price - init_price_offset
         init_trigger_price = low_price - INIT_ORDER_TRIGGER_PRICE_OFFSET
         stop_price = high_price + stop_price_offset
@@ -71,7 +71,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
 
     else:
         # long order
-        side_factor = 1.
+        side_factor = -1.
         init_order_price = high_price + init_price_offset
         init_trigger_price = high_price + INIT_ORDER_TRIGGER_PRICE_OFFSET
         stop_price = low_price - stop_price_offset
@@ -81,7 +81,9 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
                  f'{stop_price_offset=} {bucket_size=} {stop_price=} {take_price=}')
 
     # compute order size
-    qty = 1 * side_factor
+    qty = math.floor(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * 0.000001))
+    qty = qty * side_factor
+
     logging.info(f'place order: compute qty={qty}')
 
     order_uid = gen_uid()
