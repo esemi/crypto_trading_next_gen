@@ -21,10 +21,14 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
     last_buckets = get_buckets(ticker, 3)
     logging.info(f'fetch buckets {last_buckets}')
 
+    if [i for i in last_buckets if i['open'] == i['close']]:
+        logging.info(f'skip by found empty buckets')
+        return
+
     prepared_buckets = [{
         'low_price': i['low'],
         'high_price': i['high'],
-        'color': GREEN_COLOR if i['open'] <= i['close'] else RED_COLOR
+        'color': GREEN_COLOR if i['open'] < i['close'] else RED_COLOR
     } for i in list(last_buckets)]
     logging.info(f'prepare buckets {prepared_buckets}')
 
@@ -81,7 +85,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
                  f'{stop_price_offset=} {bucket_size=} {stop_price=} {take_price=}')
 
     # compute order size
-    qty = math.floor(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * 0.000001))
+    qty = round(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * 0.000001))
     qty = qty * side_factor
 
     logging.info(f'place order: compute qty={qty}')
