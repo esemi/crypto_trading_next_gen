@@ -35,7 +35,7 @@ CLEARING_TIME_OFFSET = 3600
 CLEARING_ORDER_LIFETIME = 12 * 60 * 60
 
 # Ограничение на размер свечи для входа
-INIT_ORDER_BUCKET_SIZE_INTERVAL = (0.49, 2.)
+INIT_ORDER_BUCKET_SIZE_INTERVAL = (0.39, 2.)
 # Отступ в долларах от цены свечи для ордера на вход в сделку (триггерная цена)
 INIT_ORDER_TRIGGER_PRICE_OFFSET = 0.05
 # Отступ в долларах от цены свечи для ордера на вход в сделку (цена ордера)
