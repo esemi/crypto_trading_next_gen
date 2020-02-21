@@ -2,87 +2,139 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import math
+from dataclasses import dataclass
 from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_limit_order
-from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC, INIT_ORDER_BUCKET_SIZE_INTERVAL,
-                     INIT_ORDER_TRIGGER_PRICE_OFFSET)
+from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC, INIT_ORDER_TRIGGER_PRICE_OFFSET,
+                     INIT_ORDER_FILTERS)
 from storage import add_init_order, gen_uid
 
 
-def check_need_new_order(ticker: str, force: bool = False) -> Optional[dict]:
+@dataclass
+class CandleItem:
+    low: float
+    high: float
+    open: float
+    close: float
+    color: str
+
+    @property
+    def size(self) -> float:
+        """Размер свечи"""
+        return self.high - self.low
+
+    @property
+    def percent_size_of_cost(self) -> float:
+        """Процент размера свечи от цены закрытия"""
+        return (self.size / self.close) * 100.
+
+    @property
+    def percent_size_of_body(self) -> float:
+        """Процент тела свечи"""
+        return (abs(self.open - self.close) / self.size) * 100.
+
+
+@dataclass
+class OrderProperties:
+    candle: CandleItem
+    take_profit_factor: float = 0.
+    clearing_interval: int = 3600
+
+
+def check_need_new_order(ticker: str, force: bool = False) -> Optional[OrderProperties]:
     """
     Если две старшие свечи отличаются по цвету от самой свежей - тогда вписываемся в сделку
     Возвращает словарь с данными свечки для входа или None, если входа нет
 
     """
 
-    last_buckets = get_buckets(ticker, 3)
-    logging.info(f'fetch buckets {last_buckets}')
+    source_buckets = get_buckets(ticker, 3)
+    logging.info(f'fetch buckets {source_buckets}')
 
-    if [i for i in last_buckets if i['open'] == i['close']]:
+    if [i for i in source_buckets if i['open'] == i['close']]:
         logging.info(f'skip by found empty buckets')
         return
 
-    prepared_buckets = [{
-        'low_price': i['low'],
-        'high_price': i['high'],
-        'color': GREEN_COLOR if i['open'] < i['close'] else RED_COLOR
-    } for i in list(last_buckets)]
-    logging.info(f'prepare buckets {prepared_buckets}')
+    candles = [CandleItem(low=i['low'], high=i['high'], close=i['close'], open=i['open'],
+                          color=(GREEN_COLOR if i['open'] < i['close'] else RED_COLOR))
+               for i in list(source_buckets)]
+    logging.info(f'prepare candles {candles}')
 
-    if last_buckets:
-        last_bucket = prepared_buckets[0]
-        if force:
-            return last_bucket
+    if not candles:
+        logging.info('candles not found')
+        return
 
-        bucket_size = last_bucket['high_price'] - last_bucket['low_price']
-        logging.info(f'{bucket_size=} (allowed {INIT_ORDER_BUCKET_SIZE_INTERVAL})')
+    last_candle: CandleItem = candles[0]
+    order = OrderProperties(candle=last_candle)
+    if force:
+        logging.info(f'force select candle {last_candle}')
+        return order
 
-        if INIT_ORDER_BUCKET_SIZE_INTERVAL[0] and bucket_size < INIT_ORDER_BUCKET_SIZE_INTERVAL[0]:
-            logging.warning(f'skip bucket by {bucket_size=} too small')
-            return
-        if INIT_ORDER_BUCKET_SIZE_INTERVAL[1] and bucket_size > INIT_ORDER_BUCKET_SIZE_INTERVAL[1]:
-            logging.warning(f'skip bucket by {bucket_size=} too big')
-            return
+    # Фильтруем по цвету - комбо для входа red-green-green or green-red-red
+    if last_candle.color == candles[1].color or candles[1].color != candles[2].color:
+        logging.info(f'skip by colors {candles=}')
+        return
 
-        if last_bucket['color'] != prepared_buckets[1]['color'] and \
-                prepared_buckets[1]['color'] == prepared_buckets[2]['color']:
-            return last_bucket
+    logging.info(f'{last_candle=}')
+    for size_filter, body_filter, clearing_interval, take_profit_factor in INIT_ORDER_FILTERS:
+        logging.info(f'filter {last_candle.percent_size_of_cost=} {last_candle.percent_size_of_body=} '
+                     f'by {size_filter=} and {body_filter=}; {clearing_interval=}, {take_profit_factor=}')
+
+        # фильтруем по % свечи от цены
+        if last_candle.percent_size_of_cost < size_filter[0]:
+            logging.info(f'skip candle by {last_candle.percent_size_of_cost=} too small')
+            continue
+        if last_candle.percent_size_of_cost > size_filter[1]:
+            logging.info(f'skip candle by {last_candle.percent_size_of_cost=} too big')
+            continue
+
+        # Фильтр по % тела свечи
+        if last_candle.percent_size_of_body < body_filter[0]:
+            logging.info(f'skip candle by {last_candle.percent_size_of_body=} too small')
+            continue
+        if last_candle.percent_size_of_body > body_filter[1]:
+            logging.info(f'skip candle by {last_candle.percent_size_of_body=} too big')
+            continue
+
+        order.clearing_interval = clearing_interval
+        order.take_profit_factor = take_profit_factor
+        logging.info(f'hit candle {order=}')
+        return order
+
+    logging.info(f'not found applicable config for candle')
     return
 
 
 def place_order_init(init_price_offset: float, stop_price_offset: float, take_price_offset: float,
-                     take_price_factor: float, low_price: float, high_price: float, color: str, ticker: str,
+                     take_price_factor: float, clearing_offset: int, candle: CandleItem, ticker: str,
                      dry_run: bool = False) -> Optional[dict]:
     logging.info(
-        f'place order: start low={low_price} high={high_price} {color} {ticker} price_offset={init_price_offset}')
+        f'place order: start {candle=} {ticker=} price_offset={init_price_offset}')
 
     # compute order price
-    bucket_size = high_price - low_price
-    if bucket_size <= init_price_offset:
-        logging.warning(f'too small bucket={bucket_size} - skip order')
+    if candle.size <= init_price_offset:
+        logging.warning(f'too small bucket={candle.size} - skip order')
         return
 
-    if color == RED_COLOR:
+    if candle.color == RED_COLOR:
         # short order
         side_factor = 1.
-        init_order_price = low_price - init_price_offset
-        init_trigger_price = low_price - INIT_ORDER_TRIGGER_PRICE_OFFSET
-        stop_price = high_price + stop_price_offset
-        take_price = low_price - (bucket_size * take_price_factor) - take_price_offset
+        init_order_price = candle.low - init_price_offset
+        init_trigger_price = candle.low - INIT_ORDER_TRIGGER_PRICE_OFFSET
+        stop_price = candle.high + stop_price_offset
+        take_price = candle.low - (candle.size * take_price_factor) - take_price_offset
 
     else:
         # long order
         side_factor = -1.
-        init_order_price = high_price + init_price_offset
-        init_trigger_price = high_price + INIT_ORDER_TRIGGER_PRICE_OFFSET
-        stop_price = low_price - stop_price_offset
-        take_price = high_price + (bucket_size * take_price_factor) + take_price_offset
+        init_order_price = candle.high + init_price_offset
+        init_trigger_price = candle.high + INIT_ORDER_TRIGGER_PRICE_OFFSET
+        stop_price = candle.low - stop_price_offset
+        take_price = candle.high + (candle.size * take_price_factor) + take_price_offset
 
     logging.info(f'place order: {side_factor=} {init_trigger_price=} {init_order_price=} '
-                 f'{stop_price_offset=} {bucket_size=} {stop_price=} {take_price=}')
+                 f'{stop_price_offset=} {candle.size=} {stop_price=} {take_price=}')
 
     # compute order size
     qty = round(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * 0.000001))
@@ -91,7 +143,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
     logging.info(f'place order: compute qty={qty}')
 
     order_uid = gen_uid()
-    r = add_init_order(order_uid, stop_price, take_price, abs(qty), color, ticker)
+    r = add_init_order(order_uid, stop_price, take_price, abs(qty), candle.color, ticker, clearing_offset)
     logging.info(f'place order: save order to db {order_uid}; response={r}')
 
     response = 'dry run'

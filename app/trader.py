@@ -19,10 +19,11 @@ import time
 from datetime import datetime
 
 from bitmex_ws import connect
+from clearing_operations import fetch_orders_for_clearing, clear_order
 from configs import TICKER, INIT_ORDER_PRICE_OFFSET, STOP_ORDER_PRICE_OFFSET, TAKE_ORDER_PRICE_OFFSET, \
-    INIT_ORDER_TIME_OFFSET, CLEARING_TIME_OFFSET, TAKE_ORDER_PRICE_FACTOR
+    INIT_ORDER_TIME_OFFSET, CLEARING_TIME_OFFSET
 from event_driven_operations import proceed_event
-from init_order_operations import check_need_new_order, place_order_init
+from init_order_operations import check_need_new_order, place_order_init, OrderProperties
 
 KEYBOARD_INTERRUPT = False
 INTERRUPT_SAFE = False
@@ -47,7 +48,7 @@ def main():
     signal.signal(signal.SIGINT, sigint_handler)
 
     init_order_start_time = datetime.now().replace(minute=0, second=20, microsecond=0)
-    clearing_start_time = datetime.now().replace(minute=40, second=0, microsecond=0)
+    clearing_start_time = datetime.now().replace(minute=2, second=0, microsecond=0)
 
     events_processed = 0
     while True:
@@ -56,29 +57,27 @@ def main():
         clearing_process_timer = (datetime.now() - clearing_start_time).total_seconds()
         logging.debug(f'check clearing time needed {clearing_process_timer=}')
         if clearing_process_timer >= CLEARING_TIME_OFFSET:
-            # todo get all orders
-            # todo for order in orders:
-            #     todo check order time and status
-            #     todo что делать с частично заполненными ордерами?
-            #     todo if order.lifetime >= CLEARING_ORDER_LIFETIME
-            #           cancel_order()
-            #           if canceled:
-            #                  remove from storage
-            pass
+            clearing_start_time = datetime.now().replace(minute=2, second=0, microsecond=0)
+            for order_uid in fetch_orders_for_clearing():
+                logging.info(f'clear order {order_uid}')
+                clear_order(order_uid)
 
         # post init order every hour
         init_order_process_timer = (datetime.now() - init_order_start_time).total_seconds()
         logging.debug(f'check init order needed {init_order_process_timer=}')
         if init_order_process_timer >= INIT_ORDER_TIME_OFFSET:
             init_order_start_time = datetime.now().replace(minute=0, second=20, microsecond=0)
-            bucket = check_need_new_order(TICKER)
-            logging.info(f'check need new order {bucket}')
-            if bucket:
+            order_props: OrderProperties = check_need_new_order(TICKER)
+            logging.info(f'check need new order {order_props}')
+            if order_props:
                 INTERRUPT_SAFE = True
                 order = place_order_init(init_price_offset=INIT_ORDER_PRICE_OFFSET,
                                          stop_price_offset=STOP_ORDER_PRICE_OFFSET,
-                                         take_price_offset=TAKE_ORDER_PRICE_OFFSET, ticker=TICKER,
-                                         take_price_factor=TAKE_ORDER_PRICE_FACTOR, **bucket)
+                                         take_price_offset=TAKE_ORDER_PRICE_OFFSET,
+                                         take_price_factor=order_props.take_profit_factor,
+                                         clearing_offset=order_props.clearing_interval,
+                                         candle=order_props.candle,
+                                         ticker=TICKER)
                 logging.info(f'place new init order {order}')
                 INTERRUPT_SAFE = False
 

@@ -6,7 +6,7 @@ offset = 2.
 
 
 def test_small_bucket():
-    r = place_order_init(5, 5, 5, 10, 15, GREEN_COLOR, TICKER, True)
+    r = place_order_init(5, 5, 5, 5, 10, 15, GREEN_COLOR, TICKER, True)
     assert r is None
 
 
@@ -16,7 +16,7 @@ def test_success_green():
 
     """
 
-    r = place_order_init(offset, offset, offset, 10, 15, GREEN_COLOR, TICKER, True)
+    r = place_order_init(offset, offset, offset, offset, 10, 15, GREEN_COLOR, TICKER, True)
     assert isinstance(r, dict)
     assert 'qty' in r
     assert 'init_price' in r
@@ -26,9 +26,6 @@ def test_success_green():
     assert 'response' in r
     assert r['order_uid']
     assert r['response']
-    assert r['init_price'] == 17
-    assert r['stop_price'] == 8
-    assert r['take_price'] == 22
 
 
 def test_success_red():
@@ -37,7 +34,7 @@ def test_success_red():
 
     """
 
-    r = place_order_init(offset, offset, offset, 10, 15, RED_COLOR, TICKER, True)
+    r = place_order_init(offset, offset, offset, offset, 10, 15, RED_COLOR, TICKER, True)
     assert isinstance(r, dict)
     assert 'qty' in r
     assert 'init_price' in r
@@ -47,13 +44,10 @@ def test_success_red():
     assert 'response' in r
     assert r['order_uid']
     assert r['response']
-    assert r['init_price'] == 8
-    assert r['stop_price'] == 17
-    assert r['take_price'] == 3
 
 
 def test_real_place_order():
-    r = place_order_init(offset, offset, offset, 7276, 7307, GREEN_COLOR, TICKER, False)
+    r = place_order_init(offset, offset, offset, offset, 7276, 7307, GREEN_COLOR, TICKER, False)
     assert isinstance(r, dict)
     assert 'qty' in r
     assert 'init_price' in r
@@ -65,30 +59,15 @@ def test_real_place_order():
     assert r['response']['orderID']
 
 
-def test_order_size_red():
-    r = place_order_init(offset, offset, offset, 8701, 8787, RED_COLOR, TICKER, True)
-    assert r['init_price'] == 8699
-    assert r['stop_price'] == 8789
-    assert r['qty'] == -84.0
-
-
-def test_order_size_green():
-    r = place_order_init(offset, offset, offset, 8613, 8699, GREEN_COLOR, TICKER, True)
-    assert r['init_price'] == 8701
-    assert r['stop_price'] == 8611
-    assert r['qty'] == 82
-
-
 def test_order_saved_to_storage():
-    r = place_order_init(offset, offset, offset, 8613, 8699, GREEN_COLOR, TICKER, True)
-    assert r['take_price'] == 8787.
-    assert r['stop_price'] == 8611.
+    r = place_order_init(offset, offset, offset, offset, 8613, 8699, GREEN_COLOR, TICKER, True)
 
     saved_row = get_init_order(r['order_uid'])
-    assert saved_row['take'] == '8787.0'
-    assert saved_row['stop'] == '8611.0'
+    assert 'take' in saved_row
+    assert 'stop' in saved_row
+    assert 'color' in saved_row
     assert saved_row['color'] == GREEN_COLOR
-    assert saved_row['qty'] == '82.0'
+    assert 'qty' in saved_row
 
     order_not_found = get_init_order('unknown order')
     assert order_not_found is None
