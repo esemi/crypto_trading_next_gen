@@ -32,7 +32,7 @@ class CandleItem:
     @property
     def percent_size_of_body(self) -> float:
         """Процент тела свечи"""
-        return (abs(self.open - self.close) / self.size) * 100.
+        return abs(self.open - self.close) / self.size
 
 
 @dataclass
