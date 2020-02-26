@@ -28,8 +28,9 @@ def fetch_orders_for_clearing() -> List[str]:
         time_diff_offset = init_order['clearing_offset']
 
         time_delta = datetime.utcnow() - order['timestamp'].replace(tzinfo=None)
-        logging.info(f'order time={order["timestamp"]}; delta from now UTC={time_delta}; {time_diff_offset=}')
-        if time_delta.total_seconds() < time_diff_offset:
+        logging.info(f'order time={order["timestamp"]}; delta from now UTC={time_delta} {time_delta.total_seconds()=}; '
+                     f'{time_diff_offset=}')
+        if time_delta.total_seconds() < float(time_diff_offset):
             logging.info(f'skip by time diff {order["timestamp"]}')
             continue
 

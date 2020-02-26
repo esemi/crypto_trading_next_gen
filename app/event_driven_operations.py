@@ -28,7 +28,9 @@ def proceed_event(current_event_uid: str, dry_run: bool = False) -> str:
         add_profit_order(take_uid, stop_uid, current_event_uid)
         logging.info(f'save profit orders to storage stop={stop_uid} take={take_uid}')
 
-        orders_resp = place_orders_profit(**init_order_info, dry_run=dry_run, stop_uid=stop_uid, take_uid=take_uid)
+        orders_resp = place_orders_profit(init_order_info['take'], init_order_info['stop'], init_order_info['qty'],
+                                          init_order_info['color'], init_order_info['ticker'], stop_uid=stop_uid,
+                                          take_uid=take_uid, dry_run=dry_run)
         logging.info(f'place profit orders={orders_resp}')
 
         # rm init order from storage
