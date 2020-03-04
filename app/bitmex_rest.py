@@ -11,8 +11,8 @@ def get_self_orders() -> Optional[list]:
     return client_rest.Order.Order_getOrders(filter=json.dumps({'open': True})).result()[0]
 
 
-def get_buckets(ticker: str, count: int, start: int = 0) -> list:
-    return client_rest.Trade.Trade_getBucketed(binSize='1h', partial=False, symbol=ticker, count=count, start=start,
+def get_buckets(ticker: str, count: int, start: int = 0, bin_size: str = '1h') -> list:
+    return client_rest.Trade.Trade_getBucketed(binSize=bin_size, partial=False, symbol=ticker, count=count, start=start,
                                                reverse=True).result()[0]
 
 

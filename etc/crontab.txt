@@ -1,0 +1,4 @@
+01	01  *	*	*	~/venv/bin/python ~/current/app/export_quotes.py --ticker=ETHUSD --days=730 --bin=1d > ~/logs/quotes_ethusd_1d.csv
+01	01  *	*	*	~/venv/bin/python ~/current/app/export_quotes.py --ticker=ETHUSD --days=500 --bin=1h > ~/logs/quotes_ethusd_1h.csv
+01	01	*	*	*	~/venv/bin/python ~/current/app/export_quotes.py --ticker=XBTUSD --days=730 --bin=1d > ~/logs/quotes_xbtusd_1d.csv
+01	01	*	*	*	~/venv/bin/python ~/current/app/export_quotes.py --ticker=XBTUSD --days=500 --bin=1h > ~/logs/quotes_xbtusd_1h.csv

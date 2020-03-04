@@ -63,5 +63,6 @@ def deployment():
         run('rm -rf %s' % BACKUP_PATH)
     run('mv %s %s' % (APP_PATH, BACKUP_PATH))
     run('mv %s %s' % (DEPLOY_PATH, APP_PATH))
+    run(f'crontab {APP_PATH}/etc/crontab.txt')
     run('supervisorctl restart crypto:*')
 

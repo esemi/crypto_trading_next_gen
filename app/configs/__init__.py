@@ -26,6 +26,7 @@ API_KEY = _env('API_KEY', '', str)
 API_SECRET = _env('API_SECRET', '', str)
 TICKER = 'ETHUSD'
 
+
 # Раз в сколько секунд проверяем свечи на вход
 INIT_ORDER_TIME_OFFSET = 3600
 
