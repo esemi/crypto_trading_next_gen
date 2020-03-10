@@ -32,6 +32,19 @@ INTERRUPT_SAFE = False
 WS_CLIENT = None
 
 
+def pretty_log(message: str, start: bool = True):
+    def __log_empty_rows():
+        for i in range(4):
+            logging.info('')
+
+    if start:
+        __log_empty_rows()
+        logging.info(message)
+    else:
+        logging.info(message)
+        __log_empty_rows()
+
+
 def sigint_handler(signal, frame):
     global KEYBOARD_INTERRUPT, INTERRUPT_SAFE, WS_CLIENT
     logging.warning(f'handle interrupt sig {signal} {INTERRUPT_SAFE}')
@@ -59,15 +72,18 @@ def main():
         clearing_process_timer = (datetime.now() - clearing_start_time).total_seconds()
         logging.debug(f'check clearing time needed {clearing_process_timer=}')
         if clearing_process_timer >= CLEARING_TIME_OFFSET:
+            pretty_log('clearing start', True)
             clearing_start_time = datetime.now().replace(minute=2, second=0, microsecond=0)
             for order_uid in fetch_orders_for_clearing():
                 logging.info(f'clear order {order_uid}')
                 clear_order(order_uid)
+            pretty_log('clearing end', False)
 
         # post init order every hour
         init_order_process_timer = (datetime.now() - init_order_start_time).total_seconds()
         logging.debug(f'check init order needed {init_order_process_timer=}')
         if init_order_process_timer >= INIT_ORDER_TIME_OFFSET:
+            pretty_log('init new order start', True)
             init_order_start_time = datetime.now().replace(minute=0, second=20, microsecond=0)
             order_props: OrderProperties = check_need_new_order(TICKER)
             logging.info(f'check need new order {order_props}')
@@ -82,6 +98,7 @@ def main():
                                          ticker=TICKER)
                 logging.info(f'place new init order {order}')
                 INTERRUPT_SAFE = False
+            pretty_log('init new order start', False)
 
         # post profit orders by filled event
         while True:
@@ -94,12 +111,12 @@ def main():
             if not current_event:
                 break
 
-            logging.info('start process event--------------------------------------------')
+            pretty_log('process event start', True)
             INTERRUPT_SAFE = True
             events_processed += 1
             event_processing_result = proceed_event(current_event['uid'])
             INTERRUPT_SAFE = False
-            logging.info(f'end process {event_processing_result=}---------------------------------------------------')
+            pretty_log(f'end process {event_processing_result=}', False)
 
         time.sleep(1)
 
