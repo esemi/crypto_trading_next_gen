@@ -3,6 +3,7 @@
 
 import logging
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_limit_order
@@ -119,7 +120,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
 
     if candle.color == RED_COLOR:
         # short order
-        side_factor = 1.
+        side_factor = 1
         init_order_price = candle.low - init_price_offset
         init_trigger_price = candle.low - INIT_ORDER_TRIGGER_PRICE_OFFSET
         stop_price = candle.high + stop_price_offset
@@ -127,7 +128,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
 
     else:
         # long order
-        side_factor = -1.
+        side_factor = -1
         init_order_price = candle.high + init_price_offset
         init_trigger_price = candle.high + INIT_ORDER_TRIGGER_PRICE_OFFSET
         stop_price = candle.low - stop_price_offset
@@ -136,9 +137,17 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
     logging.info(f'place order: {side_factor=} {init_trigger_price=} {init_order_price=} '
                  f'{stop_price_offset=} {candle.size=} {stop_price=} {take_price=}')
 
+    init_order_price = Decimal(init_order_price)
+    init_trigger_price = Decimal(init_trigger_price)
+    stop_price = Decimal(stop_price)
+    take_price = Decimal(take_price)
+
+    logging.info(f'place order round: {side_factor=} {init_trigger_price=} {init_order_price=} '
+                 f'{stop_price_offset=} {candle.size=} {stop_price=} {take_price=}')
+
     # compute order size
     qty = round(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * 0.000001))
-    qty = qty * side_factor
+    qty: int = qty * side_factor
 
     logging.info(f'place order: compute qty={qty}')
 

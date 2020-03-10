@@ -3,6 +3,7 @@
 
 import logging
 import time
+from decimal import Decimal
 
 from bravado.exception import HTTPServerError
 
@@ -57,12 +58,12 @@ def proceed_event(current_event_uid: str, dry_run: bool = False) -> str:
         return 'not found order'
 
 
-def place_orders_profit(take: float, stop: float, qty: float, color: str, ticker: str, stop_uid: str, take_uid: str,
+def place_orders_profit(take: str, stop: str, qty: str, color: str, ticker: str, stop_uid: str, take_uid: str,
                         dry_run: bool = False) -> dict:
 
-    take_price = float(take)
-    stop_price = float(stop)
-    qty = float(qty)
+    take_price = Decimal(take)
+    stop_price = Decimal(stop)
+    qty = Decimal(qty)
     logging.info(f'place profit orders take_price={take_price}, stop_price={stop_price}, qty={qty}, color={color}, '
                  f'ticker={ticker} {stop_uid} {take_uid}')
 

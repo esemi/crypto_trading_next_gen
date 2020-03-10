@@ -1,5 +1,6 @@
 import os
 from typing import Callable, Union, Optional
+from decimal import getcontext
 
 import dotenv
 
@@ -25,6 +26,8 @@ TEST_MODE = _env('TEST_MODE', False, bool)
 API_KEY = _env('API_KEY', '', str)
 API_SECRET = _env('API_SECRET', '', str)
 TICKER = 'ETHUSD'
+COMPUTE_PRECISION = 6
+getcontext().prec = COMPUTE_PRECISION
 
 
 # Раз в сколько секунд проверяем свечи на вход
