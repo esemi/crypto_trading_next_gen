@@ -8,7 +8,7 @@ from typing import Optional
 
 from bitmex_rest import get_buckets, post_stop_limit_order
 from configs import (RED_COLOR, GREEN_COLOR, INIT_ORDER_SIZE_IN_BTC, INIT_ORDER_TRIGGER_PRICE_OFFSET,
-                     INIT_ORDER_FILTERS)
+                     INIT_ORDER_FILTERS, CandleFilter)
 from storage import add_init_order, gen_uid
 
 
@@ -66,45 +66,57 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[OrderProp
         logging.info('candles not found')
         return
 
-    last_candle: CandleItem = candles[0]
+    first_candle: CandleItem = candles.pop()
+    second_candle: CandleItem = candles.pop()
+    last_candle: CandleItem = candles.pop()
+
     order = OrderProperties(candle=last_candle)
     if force:
         logging.info(f'force select candle {last_candle}')
         return order
 
     # Фильтруем по цвету - комбо для входа red-green-green or green-red-red
-    if last_candle.color == candles[1].color or candles[1].color != candles[2].color:
-        logging.info(f'skip by colors {candles=}')
+    if last_candle.color == second_candle.color or second_candle.color != first_candle.color:
+        logging.info(f'skip by colors {first_candle=} {second_candle=} {last_candle=}')
         return
 
     logging.info(f'{last_candle=}')
-    for size_filter, body_filter, clearing_interval, take_profit_factor in INIT_ORDER_FILTERS:
-        logging.info(f'filter {last_candle.percent_size_of_cost=} {last_candle.percent_size_of_body=} '
-                     f'by {size_filter=} and {body_filter=}; {clearing_interval=}, {take_profit_factor=}')
+    for filter_config in INIT_ORDER_FILTERS:
+        logging.info(f'apply filters to candles {filter_config=}')
 
-        # фильтруем по % свечи от цены
-        if last_candle.percent_size_of_cost < size_filter[0]:
-            logging.info(f'skip candle by {last_candle.percent_size_of_cost=} too small')
-            continue
-        if last_candle.percent_size_of_cost > size_filter[1]:
-            logging.info(f'skip candle by {last_candle.percent_size_of_cost=} too big')
+        if not _apply_filter_candle(last_candle, filter_config.last_candle):
+            logging.info(f'skip by {last_candle} and {filter_config.last_candle}')
             continue
 
-        # Фильтр по % тела свечи
-        if last_candle.percent_size_of_body < body_filter[0]:
-            logging.info(f'skip candle by {last_candle.percent_size_of_body=} too small')
-            continue
-        if last_candle.percent_size_of_body > body_filter[1]:
-            logging.info(f'skip candle by {last_candle.percent_size_of_body=} too big')
+        if not _apply_filter_candle(second_candle, filter_config.second_candle):
+            logging.info(f'skip by {second_candle} and {filter_config.second_candle}')
             continue
 
-        order.clearing_interval = clearing_interval
-        order.take_profit_factor = take_profit_factor
+        if not _apply_filter_candle(first_candle, filter_config.first_candle):
+            logging.info(f'skip by {first_candle} and {filter_config.first_candle}')
+            continue
+
+        order.clearing_interval = filter_config.clearing_interval
+        order.take_profit_factor = filter_config.take_profit_factor
         logging.info(f'hit candle {order=}')
         return order
 
     logging.info(f'not found applicable config for candle')
     return
+
+
+def _apply_filter_candle(candle: CandleItem, filters_config: Optional[CandleFilter]) -> bool:
+    logging.info(f'apply filter {filters_config} to {candle=}')
+
+    if filters_config and filters_config.size:
+        if not (filters_config.size.min <= candle.percent_size_of_cost <= filters_config.size.max):
+            return False
+
+    if filters_config and filters_config.body:
+        if not (filters_config.body.min <= candle.percent_size_of_body <= filters_config.body.max):
+            return False
+
+    return True
 
 
 def place_order_init(init_price_offset: float, stop_price_offset: float, take_price_offset: float,
@@ -146,7 +158,7 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
                  f'{stop_price_offset=} {candle.size=} {stop_price=} {take_price=}')
 
     # compute order size
-    qty = round(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * 0.000001))
+    qty = round(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * Decimal('0.000001')))
     qty: int = qty * side_factor
 
     logging.info(f'place order: compute qty={qty}')

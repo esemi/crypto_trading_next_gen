@@ -1,6 +1,7 @@
 import os
-from typing import Callable, Union, Optional
-from decimal import getcontext
+from dataclasses import dataclass
+from typing import Callable, Union, Optional, Dict, List, Tuple
+from decimal import getcontext, Decimal
 
 import dotenv
 
@@ -39,22 +40,68 @@ CLEARING_TIME_OFFSET = 3600
 CLEARING_ORDER_LIFETIME = 3600
 
 
-# Фильтры свечи на вход
-# List[
-#   Tuple(
-#       Tuple(float, float),  # Фильтр по % свечи от цены
-#       Tuple(float, float),  # Фильтр по % тела свечи
-#       int,                  # секунд до клиринга
-#       float,                # Множитель для размера свечи для тейк ордера
-#   )
-# ]
-INIT_ORDER_FILTERS = [
-    ((0.4, 0.49), (0., 0.69), CLEARING_ORDER_LIFETIME * 2, 4.),
-    ((0.6, 0.69), (0.4, 1.0), CLEARING_ORDER_LIFETIME, 4.),
-    ((0.7, 0.79), (0.2, 1.0), CLEARING_ORDER_LIFETIME * 2, 3.5),
-    ((0.8, 0.89), (0.3, 0.69), CLEARING_ORDER_LIFETIME, 4.),
-    ((0.9, 0.99), (0., 0.49), CLEARING_ORDER_LIFETIME, 3.5),
-    ((1.6, 1.99), (0.1, 1.0), CLEARING_ORDER_LIFETIME, 4.),
+@dataclass
+class MinMaxFilter:
+    min: float
+    max: float
+
+
+@dataclass
+class CandleFilter:
+    size: Optional[MinMaxFilter] = None  # Фильтр по % последней свечи от цены
+    body: Optional[MinMaxFilter] = None  # Фильтр по % тела последней свечи
+
+
+# Фильтры свечей на вход
+@dataclass
+class InitOrderConfig:
+    take_profit_factor: float  # Множитель для размера свечи для тейк ордера
+    clearing_interval: int = CLEARING_ORDER_LIFETIME  # секунд до клиринга
+    first_candle: Optional[CandleFilter] = None
+    second_candle: Optional[CandleFilter] = None
+    last_candle: Optional[CandleFilter] = None
+
+
+INIT_ORDER_FILTERS: List[InitOrderConfig] = [
+    InitOrderConfig(take_profit_factor=4., clearing_interval=CLEARING_ORDER_LIFETIME * 2,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.4, max=0.49),
+                        body=MinMaxFilter(min=0.0, max=0.69),
+                    ),
+                    second_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.4, max=0.49),
+                        body=MinMaxFilter(min=0.0, max=0.69),
+                    ),
+                    first_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.4, max=0.49),
+                        body=MinMaxFilter(min=0.0, max=0.69),
+                    ),
+                    ),
+    InitOrderConfig(take_profit_factor=4.,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.6, max=0.69),
+                        body=MinMaxFilter(min=0.4, max=1.0),
+                    )),
+    InitOrderConfig(take_profit_factor=3.5, clearing_interval=CLEARING_ORDER_LIFETIME * 2,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.7, max=0.79),
+                        body=MinMaxFilter(min=0.2, max=1.0),
+                    )),
+    InitOrderConfig(take_profit_factor=4.,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.8, max=0.89),
+                        body=MinMaxFilter(min=0.3, max=0.69),
+                    )),
+    InitOrderConfig(take_profit_factor=3.5,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.9, max=0.99),
+                        body=MinMaxFilter(min=0.0, max=0.49),
+                    )),
+    InitOrderConfig(take_profit_factor=4.,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=1.6, max=1.99),
+                        body=MinMaxFilter(min=0.1, max=1.0),
+                    )),
 ]
 
 # Отступ в долларах от цены свечи для ордера на вход в сделку (триггерная цена)
@@ -67,7 +114,7 @@ STOP_ORDER_PRICE_OFFSET = 0.
 TAKE_ORDER_PRICE_OFFSET = 0.1
 
 # Размер ордера на вход в сделку, в BTC. Считается как 1% от депо в битках.
-INIT_ORDER_SIZE_IN_BTC = _env('INIT_ORDER_SIZE_IN_BTC', None, float)  # todo change for production
+INIT_ORDER_SIZE_IN_BTC = _env('INIT_ORDER_SIZE_IN_BTC', None, Decimal)  # todo change for production
 
 RED_COLOR = 'RED'
 GREEN_COLOR = 'GREEN'
