@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 from typing import Optional
 
 import redis
@@ -23,9 +24,9 @@ def gen_uid() -> str:
     return uuid.uuid4().hex
 
 
-def add_init_order(uid: str, stop_price: float, take_price: float, qty: float, color: str, ticker: str,
+def add_init_order(uid: str, stop_price: Decimal, take_price: Decimal, qty: int, color: str, ticker: str,
                    clearing_offset: int = 3600):
-    return client_redis.hmset(_init_order_key(uid), {'stop': stop_price, 'take': take_price, 'qty': qty,
+    return client_redis.hmset(_init_order_key(uid), {'stop': str(stop_price), 'take': str(take_price), 'qty': str(qty),
                                                      'color': color, 'ticker': ticker,
                                                      'clearing_offset': clearing_offset})
 

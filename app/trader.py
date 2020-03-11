@@ -98,11 +98,10 @@ def main():
                                          ticker=TICKER)
                 logging.info(f'place new init order {order}')
                 INTERRUPT_SAFE = False
-            pretty_log('init new order start', False)
+            pretty_log('init new order end', False)
 
         # post profit orders by filled event
         while True:
-            # auto reconnect to wss
             if WS_CLIENT.exited:
                 logging.warning('reconnect to socket')
                 WS_CLIENT = connect()
@@ -128,6 +127,6 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG if params.debug else logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
-    logging.info('start trader process')
+    pretty_log('start trader process', True)
     main()
-    logging.info('end trader process')
+    pretty_log('end trader process', False)

@@ -66,41 +66,56 @@ INIT_ORDER_FILTERS: List[InitOrderConfig] = [
     InitOrderConfig(take_profit_factor=4., clearing_interval=CLEARING_ORDER_LIFETIME * 2,
                     last_candle=CandleFilter(
                         size=MinMaxFilter(min=0.4, max=0.49),
-                        body=MinMaxFilter(min=0.0, max=0.69),
+                        body=MinMaxFilter(min=0.0, max=0.79)
                     ),
                     second_candle=CandleFilter(
-                        size=MinMaxFilter(min=0.4, max=0.49),
-                        body=MinMaxFilter(min=0.0, max=0.69),
+                        body=MinMaxFilter(min=0.0, max=0.69)
                     ),
                     first_candle=CandleFilter(
-                        size=MinMaxFilter(min=0.4, max=0.49),
-                        body=MinMaxFilter(min=0.0, max=0.69),
-                    ),
-                    ),
+                        body=MinMaxFilter(min=0.3, max=1.0)
+                    )),
     InitOrderConfig(take_profit_factor=4.,
                     last_candle=CandleFilter(
                         size=MinMaxFilter(min=0.6, max=0.69),
                         body=MinMaxFilter(min=0.4, max=1.0),
+                    ),
+                    second_candle=CandleFilter(
+                        body=MinMaxFilter(min=0.2, max=1.0)
+                    ),
+                    first_candle=CandleFilter(
+                        body=MinMaxFilter(min=0.2, max=1.0)
                     )),
     InitOrderConfig(take_profit_factor=3.5, clearing_interval=CLEARING_ORDER_LIFETIME * 2,
                     last_candle=CandleFilter(
                         size=MinMaxFilter(min=0.7, max=0.79),
-                        body=MinMaxFilter(min=0.2, max=1.0),
+                        body=MinMaxFilter(min=0.1, max=0.79),
                     )),
     InitOrderConfig(take_profit_factor=4.,
                     last_candle=CandleFilter(
                         size=MinMaxFilter(min=0.8, max=0.89),
                         body=MinMaxFilter(min=0.3, max=0.69),
-                    )),
-    InitOrderConfig(take_profit_factor=3.5,
-                    last_candle=CandleFilter(
-                        size=MinMaxFilter(min=0.9, max=0.99),
-                        body=MinMaxFilter(min=0.0, max=0.49),
+                    ),
+                    second_candle=CandleFilter(
+                        body=MinMaxFilter(min=0.0, max=0.69)
+                    ),
+                    first_candle=CandleFilter(
+                        body=MinMaxFilter(min=0.3, max=0.69)
                     )),
     InitOrderConfig(take_profit_factor=4.,
                     last_candle=CandleFilter(
                         size=MinMaxFilter(min=1.6, max=1.99),
                         body=MinMaxFilter(min=0.1, max=1.0),
+                    )),
+    InitOrderConfig(take_profit_factor=4.,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=0.5, max=0.55),
+                        body=MinMaxFilter(min=0.3, max=1.0),
+                    ),
+                    second_candle=CandleFilter(
+                        body=MinMaxFilter(min=0.5, max=1.0)
+                    ),
+                    first_candle=CandleFilter(
+                        body=MinMaxFilter(min=0.0, max=0.59)
                     )),
 ]
 
