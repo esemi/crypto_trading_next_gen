@@ -58,9 +58,8 @@ def proceed_event(current_event_uid: str, dry_run: bool = False) -> str:
         return 'not found order'
 
 
-def place_orders_profit(take: str, stop: str, qty: str, color: str, ticker: str, stop_uid: str, take_uid: str,
+def place_orders_profit(take: str, stop: str, qty: str, color: str, ticker: str, stop_uid: str, take_uid: str,  # noqa
                         dry_run: bool = False) -> dict:
-
     take_price = Decimal(take)
     stop_price = Decimal(stop)
     qty = Decimal(qty)

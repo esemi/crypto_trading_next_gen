@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
-from typing import Callable, Union, Optional, Dict, List, Tuple
 from decimal import getcontext, Decimal
+from typing import Callable, Union, Optional, List
 
 import dotenv
 
@@ -29,7 +29,6 @@ API_SECRET = _env('API_SECRET', '', str)
 TICKER = 'ETHUSD'
 COMPUTE_PRECISION = 6
 getcontext().prec = COMPUTE_PRECISION
-
 
 # Раз в сколько секунд проверяем свечи на вход
 INIT_ORDER_TIME_OFFSET = 3600

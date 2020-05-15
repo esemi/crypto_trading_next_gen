@@ -54,7 +54,7 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[OrderProp
     logging.info(f'fetch buckets {source_buckets}')
 
     if [i for i in source_buckets if i['open'] == i['close']]:
-        logging.info(f'skip by found empty buckets')
+        logging.info('skip by found empty buckets')
         return
 
     candles = [CandleItem(low=i['low'], high=i['high'], close=i['close'], open=i['open'],
@@ -101,7 +101,7 @@ def check_need_new_order(ticker: str, force: bool = False) -> Optional[OrderProp
         logging.info(f'hit candle {order=}')
         return order
 
-    logging.info(f'not found applicable config for candle')
+    logging.info('not found applicable config for candle')
     return
 
 
@@ -158,7 +158,8 @@ def place_order_init(init_price_offset: float, stop_price_offset: float, take_pr
                  f'{stop_price_offset=} {candle.size=} {stop_price=} {take_price=}')
 
     # compute order size
-    qty = round(INIT_ORDER_SIZE_IN_BTC / ((min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * Decimal('0.000001')))
+    qty = round(INIT_ORDER_SIZE_IN_BTC / (
+                (min(init_trigger_price, stop_price) - max(init_trigger_price, stop_price)) * Decimal('0.000001')))
     qty: int = qty * side_factor
 
     logging.info(f'place order: compute qty={qty}')

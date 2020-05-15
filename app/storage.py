@@ -51,5 +51,3 @@ def del_init_order(uid: str):
 
 def del_profit_order(uid: str):
     return client_redis.delete(_profit_order_key(uid))
-
-
