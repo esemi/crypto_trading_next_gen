@@ -67,7 +67,7 @@ def place_orders_profit(take: str, stop: str, qty: str, color: str, ticker: str,
                  f'ticker={ticker} {stop_uid} {take_uid}')
 
     if color == GREEN_COLOR:
-        qty *= -1.
+        qty *= Decimal(-1.)
 
     stop_resp = take_resp = 'dry run'
 
