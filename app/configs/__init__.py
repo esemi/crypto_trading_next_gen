@@ -62,9 +62,9 @@ class InitOrderConfig:
 
 
 INIT_ORDER_FILTERS: List[InitOrderConfig] = [
-    InitOrderConfig(take_profit_factor=6., clearing_interval=CLEARING_ORDER_LIFETIME * 2,
+    InitOrderConfig(take_profit_factor=6., clearing_interval=CLEARING_ORDER_LIFETIME * 1,
                     last_candle=CandleFilter(
-                        size=MinMaxFilter(min=0.4, max=0.79),
+                        size=MinMaxFilter(min=0.4, max=0.59),
                         body=MinMaxFilter(min=0.0, max=100.0)
                     ),
                     second_candle=CandleFilter(
