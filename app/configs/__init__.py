@@ -73,6 +73,11 @@ INIT_ORDER_FILTERS: List[InitOrderConfig] = [
                     first_candle=CandleFilter(
                         body=MinMaxFilter(min=0.0, max=100.0)
                     )),
+    InitOrderConfig(take_profit_factor=5., clearing_interval=CLEARING_ORDER_LIFETIME * 1,
+                    last_candle=CandleFilter(
+                        size=MinMaxFilter(min=1.6, max=1.99),
+                        body=MinMaxFilter(min=0.0, max=100.0),
+                    )),
 ]
 
 # Отступ в долларах от цены свечи для ордера на вход в сделку (триггерная цена)
