@@ -57,7 +57,7 @@ def deployment():
 
     with cd(DEPLOY_PATH):
         run(f'tar -xzf {BUILD_FILENAME}')
-    run(f'{VENV_PATH}/bin/pip install -r %s' % os.path.join(DEPLOY_PATH, 'requirements', 'common.txt'))
+    run(f'{VENV_PATH}/bin/pip install -r %s --upgrade' % os.path.join(DEPLOY_PATH, 'requirements', 'common.txt'))
 
     if exists(BACKUP_PATH):
         run('rm -rf %s' % BACKUP_PATH)
