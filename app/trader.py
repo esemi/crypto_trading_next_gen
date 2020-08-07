@@ -107,6 +107,7 @@ def main():
                 WS_CLIENT = connect()
 
             current_event = WS_CLIENT.get_event()
+            pretty_log(f'{current_event=}')
             if not current_event:
                 break
 
