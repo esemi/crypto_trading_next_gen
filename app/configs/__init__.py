@@ -90,7 +90,7 @@ STOP_ORDER_PRICE_OFFSET = 0.
 TAKE_ORDER_PRICE_OFFSET = 0.1
 
 # Размер ордера на вход в сделку, в BTC. Считается как 1% от депо в битках.
-INIT_ORDER_SIZE_IN_BTC = _env('INIT_ORDER_SIZE_IN_BTC', None, Decimal)  # todo change for production
+INIT_ORDER_SIZE_IN_BTC = _env('INIT_ORDER_SIZE_IN_BTC', Decimal(0.0008), Decimal)  # todo change for production
 
 RED_COLOR = 'RED'
 GREEN_COLOR = 'GREEN'
