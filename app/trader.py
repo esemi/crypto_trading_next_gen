@@ -122,7 +122,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='crypto trader')
-    parser.add_argument('--debug', type=bool,  help='Show more logs', default=True)
+    parser.add_argument('--debug', type=bool,  help='Show more logs', default=False)
     params = parser.parse_args()
     logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG if params.debug else logging.INFO,
