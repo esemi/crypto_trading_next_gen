@@ -22,6 +22,5 @@ $ ./app/trader.py --debug=True
 
 
 ### Run on production
-```
-@see etc/*.conf
-```
+@see [etc/*.conf](https://github.com/esemi/crypto_trading_next_gen/blob/master/etc/)
+
