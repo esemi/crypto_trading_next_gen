@@ -1,4 +1,4 @@
-Trading bot for crypto exchanges [![Deploy](https://github.com/esemi/crypto_trading_next_gen/actions/workflows/deployment.yml/badge.svg?branch=master)](https://github.com/esemi/crypto_trading_next_gen/actions/workflows/deployment.yml)
+Trading bot for crypto exchanges
 ---
 
 ### Install
